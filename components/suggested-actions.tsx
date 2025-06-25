@@ -28,22 +28,12 @@ function PureSuggestedActions({
       label: 'o que devo fazer?',
       action: `Faz dois dias que tenho dores no peito`,
     },
-    // {
-    //   title: 'Help me write an essay',
-    //   label: `about silicon valley`,
-    //   action: `Help me write an essay about silicon valley`,
-    // },
-    // {
-    //   title: 'What is the weather',
-    //   label: 'in San Francisco?',
-    //   action: 'What is the weather in San Francisco?',
-    // },
   ];
 
   return (
     <div
       data-testid="suggested-actions"
-      className="grid sm:grid-cols-2 gap-2 w-full"
+      className="w-full flex flex-col gap-2"
     >
       {suggestedActions.map((suggestedAction, index) => (
         <motion.div

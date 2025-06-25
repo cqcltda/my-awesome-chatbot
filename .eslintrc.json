@@ -1,23 +1,48 @@
 {
   "extends": [
     "next/core-web-vitals",
-    "plugin:import/recommended",
-    "plugin:import/typescript",
-    "prettier",
-    "plugin:tailwindcss/recommended"
+    "next/typescript",
+    "plugin:react/recommended",
+    "plugin:react-hooks/recommended"
   ],
-  "plugins": ["tailwindcss"],
   "rules": {
-    "tailwindcss/no-custom-classname": "off",
-    "tailwindcss/classnames-order": "off"
-  },
-  "settings": {
-    "import/resolver": {
-      "typescript": {
-        "alwaysTryTypes": true,
-        "project": "./tsconfig.json"
+    "@typescript-eslint/no-duplicate-enum-values": "off",
+    "import/order": [
+      "error",
+      {
+        "groups": [
+          "builtin",
+          "external",
+          "internal",
+          "parent",
+          "sibling",
+          "index"
+        ],
+        "pathGroups": [
+          {
+            "pattern": "react",
+            "group": "external",
+            "position": "before"
+          }
+        ],
+        "pathGroupsExcludedImportTypes": [
+          "react"
+        ],
+        "newlines-between": "always",
+        "alphabetize": {
+          "order": "asc",
+          "caseInsensitive": true
+        }
       }
-    }
-  },
-  "ignorePatterns": ["**/components/ui/**"]
+    ],
+    "import/newline-after-import": "error",
+    "import/no-duplicates": "error",
+    "quotes": [
+      "error",
+      "single",
+      {
+        "avoidEscape": true
+      }
+    ]
+  }
 }
