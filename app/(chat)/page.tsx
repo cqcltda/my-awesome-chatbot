@@ -1,12 +1,12 @@
 import { cookies } from 'next/headers';
 
-import { Chat } from '@/components/chat';
 import { DataStreamHandler } from '@/components/data-stream-handler';
+import { FloatingChat } from '@/components/floating-chat';
 import { DEFAULT_CHAT_MODEL } from '@/lib/ai/models';
 import { generateUUID } from '@/lib/utils';
 import { redirect } from 'next/navigation';
 import { auth } from '../(auth)/auth';
-import { FloatingChat } from './chat/components/floating-chat';
+// import { FloatingChat } from './chat/components/floating-chat';
 
 export default async function Page() {
   const session = await auth();
@@ -22,8 +22,8 @@ export default async function Page() {
 
   if (!modelIdFromCookie) {
     return (
-      <FloatingChat>
-        <Chat
+      <>
+        <FloatingChat
           key={id}
           id={id}
           initialMessages={[]}
@@ -34,13 +34,13 @@ export default async function Page() {
           autoResume={false}
         />
         <DataStreamHandler id={id} />
-      </FloatingChat>
+      </>
     );
   }
 
   return (
-    <FloatingChat>
-      <Chat
+    <>
+      <FloatingChat
         key={id}
         id={id}
         initialMessages={[]}
@@ -51,6 +51,6 @@ export default async function Page() {
         autoResume={false}
       />
       <DataStreamHandler id={id} />
-    </FloatingChat>
+    </>
   );
 }

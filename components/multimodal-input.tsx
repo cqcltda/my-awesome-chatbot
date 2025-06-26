@@ -2,6 +2,7 @@
 
 import type { Attachment, UIMessage } from 'ai';
 import cx from 'classnames';
+
 import type React from 'react';
 import {
   memo,
@@ -293,6 +294,7 @@ function PureMultimodalInput({
           }
         }}
       />
+
 
       <div className="absolute bottom-0 p-2 w-fit flex flex-row justify-start">
         <AttachmentsButton fileInputRef={fileInputRef} status={status} />
