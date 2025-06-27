@@ -147,8 +147,8 @@ const FloatingChat = ({ id,
   });
 
   const FloatingChatContent = () => (
-    <Card className="w-full h-full border-0 md:border">
-      <CardHeader>
+    <Card className="w-full h-full border-0 md:border flex flex-col">
+      <CardHeader className="flex-shrink-0">
         <ChatHeader
           chatId={id}
           selectedModelId={initialChatModel}
@@ -157,21 +157,21 @@ const FloatingChat = ({ id,
           session={session}
         />
       </CardHeader>
-      <CardContent>
-        <ScrollArea className="h-[300px] w-full pr-4">
-        <Messages
-          chatId={id}
-          status={status}
-          votes={votes}
-          messages={messages}
-          setMessages={setMessages}
-          reload={reload}
-          isReadonly={isReadonly}
-          isArtifactVisible={isArtifactVisible}
-        />
+      <CardContent className="flex-1 overflow-hidden p-0">
+        <ScrollArea className="w-full h-full pr-4">
+          <Messages
+            chatId={id}
+            status={status}
+            votes={votes}
+            messages={messages}
+            setMessages={setMessages}
+            reload={reload}
+            isReadonly={isReadonly}
+            isArtifactVisible={isArtifactVisible}
+          />
         </ScrollArea>
       </CardContent>
-      <CardFooter>
+      <CardFooter className="flex-shrink-0">
         <form className="flex mx-auto px-4 bg-background pb-4 md:pb-6 gap-2 w-full md:max-w-3xl">
           {!isReadonly && (
             <MultimodalInput
@@ -254,12 +254,12 @@ const FloatingChat = ({ id,
             <DrawerTitle>Chat</DrawerTitle>
           </DrawerHeader>
           <div className="flex flex-col h-full">
-              <FloatingChatContent />
+            <FloatingChatContent />
           </div>
           <DrawerFooter className="pt-2 sm:hidden">
-              <DrawerClose asChild>
-                  <Button variant="outline">Fechar</Button>
-              </DrawerClose>
+            <DrawerClose asChild>
+              <Button variant="outline">Fechar</Button>
+            </DrawerClose>
           </DrawerFooter>
         </DrawerContent>
       </Drawer>
