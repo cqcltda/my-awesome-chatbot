@@ -1,5 +1,14 @@
 'use client';
 
+import { Button } from '@/components/ui/button';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { cn } from '@/lib/utils';
 import {
   type IconType,
   SiAstro,
@@ -98,15 +107,6 @@ import {
   type CodeOptionsMultipleThemes,
   codeToHtml,
 } from 'shiki';
-import { Button } from '@/components/ui/button';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { cn } from '@/lib/utils';
 
 export type { BundledLanguage } from 'shiki';
 
@@ -507,7 +507,6 @@ export const CodeBlockCopyButton = ({
 
   if (asChild) {
     return cloneElement(children as ReactElement, {
-      // @ts-expect-error - we know this is a button
       onClick: copyToClipboard,
     });
   }
