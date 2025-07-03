@@ -1,7 +1,6 @@
 'use client';
 
 import type { Attachment, UIMessage } from 'ai';
-import cx from 'classnames';
 
 import type React from 'react';
 import {
@@ -22,11 +21,10 @@ import type { UseChatHelpers } from '@ai-sdk/react';
 import equal from 'fast-deep-equal';
 import { AnimatePresence, motion } from 'framer-motion';
 import { ArrowDown } from 'lucide-react';
+import { Input, Suggestions } from './ai';
 import { ArrowUpIcon, PaperclipIcon, StopIcon } from './icons';
 import { PreviewAttachment } from './preview-attachment';
-import { SuggestedActions } from './suggested-actions';
 import { Button } from './ui/button';
-import { Textarea } from './ui/textarea';
 import type { VisibilityType } from './visibility-selector';
 
 function PureMultimodalInput({
@@ -238,11 +236,11 @@ function PureMultimodalInput({
       {messages.length === 0 &&
         attachments.length === 0 &&
         uploadQueue.length === 0 && (
-          <SuggestedActions
-            append={append}
-            chatId={chatId}
-            selectedVisibilityType={selectedVisibilityType}
-          />
+          <Suggestions suggestions={[
+            'Estou com dor de cabeça, pode me ajudar?',
+            'Faz dois dias que tenho dores no peito, o que devo fazer?',
+            'Tenho dor de cabeça e estou com febre, o que devo fazer?',
+          ]} onSuggestionClick={(suggestion) => console.log(suggestion)} />
         )}
 
       <input
@@ -277,7 +275,7 @@ function PureMultimodalInput({
         </div>
       )}
 
-      <Textarea
+      {/* <Textarea
         data-testid="multimodal-input"
         ref={textareaRef}
         placeholder="Escreva uma mensagem..."
@@ -304,14 +302,16 @@ function PureMultimodalInput({
             }
           }
         }}
-      />
+      /> */}
+
+      <Input onSubmit={submitForm} inputValue={localInput} setInput={setLocalInput} />
 
 
-      <div className="absolute bottom-0 p-2 w-fit flex flex-row justify-start">
+      {/* <div className="absolute bottom-0 p-2 w-fit flex flex-row justify-start">
         <AttachmentsButton fileInputRef={fileInputRef} status={status} />
-      </div>
+      </div> */}
 
-      <div className="absolute bottom-0 right-0 p-2 w-fit flex flex-row justify-end">
+      {/* <div className="absolute bottom-0 right-0 p-2 w-fit flex flex-row justify-end">
         {status === 'submitted' ? (
           <StopButton stop={stop} setMessages={setMessages} />
         ) : (
@@ -321,7 +321,7 @@ function PureMultimodalInput({
             uploadQueue={uploadQueue}
           />
         )}
-      </div>
+      </div> */}
     </div>
   );
 }
