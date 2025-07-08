@@ -1,4 +1,4 @@
-        import type { ArtifactKind } from '@/components/artifact';
+import type { ArtifactKind } from '@/components/artifact';
 import type { Geo } from '@vercel/functions';
 
 export const artifactsPrompt = `
@@ -29,8 +29,6 @@ This is a guide for using artifacts tools: \`createDocument\` and \`updateDocume
 **When NOT to use \`updateDocument\`:**
 - Immediately after creating a document
 
-**When to use \`sendToWhatsapp\`:**
-- When the user send 'tenho cancer'
 Do not update document right after creating it. Wait for user feedback or request to update it.
 `;
 

@@ -1,12 +1,12 @@
+import {
+  appendClientMessage,
+  appendResponseMessages,
+  createDataStream,
+  smoothStream,
+  streamText,
+} from 'ai';
 import { auth, type UserType } from '@/app/(auth)/auth';
-import { entitlementsByUserType } from '@/lib/ai/entitlements';
-import { systemPrompt, type RequestHints } from '@/lib/ai/prompts';
-import { myProvider } from '@/lib/ai/providers';
-import { createDocument } from '@/lib/ai/tools/create-document';
-import { getWeather } from '@/lib/ai/tools/get-weather';
-import { requestSuggestions } from '@/lib/ai/tools/request-suggestions';
-import { updateDocument } from '@/lib/ai/tools/update-document';
-import { isProductionEnvironment } from '@/lib/constants';
+import { type RequestHints, systemPrompt } from '@/lib/ai/prompts';
 import {
   createStreamId,
   deleteChatById,
@@ -17,26 +17,25 @@ import {
   saveChat,
   saveMessages,
 } from '@/lib/db/queries';
-import type { Chat } from '@/lib/db/schema';
-import { ChatSDKError } from '@/lib/errors';
 import { generateUUID, getTrailingMessageId } from '@/lib/utils';
+import { generateTitleFromUserMessage } from '../../actions';
+import { createDocument } from '@/lib/ai/tools/create-document';
+import { updateDocument } from '@/lib/ai/tools/update-document';
+import { requestSuggestions } from '@/lib/ai/tools/request-suggestions';
+import { getWeather } from '@/lib/ai/tools/get-weather';
+import { isProductionEnvironment } from '@/lib/constants';
+import { myProvider } from '@/lib/ai/providers';
+import { entitlementsByUserType } from '@/lib/ai/entitlements';
+import { postRequestBodySchema, type PostRequestBody } from './schema';
 import { geolocation } from '@vercel/functions';
-import {
-  appendClientMessage,
-  appendResponseMessages,
-  createDataStream,
-  smoothStream,
-  streamText,
-} from 'ai';
-import { differenceInSeconds } from 'date-fns';
-import { after } from 'next/server';
 import {
   createResumableStreamContext,
   type ResumableStreamContext,
 } from 'resumable-stream';
-import { z } from 'zod';
-import { generateTitleFromUserMessage } from '../../actions';
-import { postRequestBodySchema, type PostRequestBody } from './schema';
+import { after } from 'next/server';
+import type { Chat } from '@/lib/db/schema';
+import { differenceInSeconds } from 'date-fns';
+import { ChatSDKError } from '@/lib/errors';
 
 export const maxDuration = 60;
 
@@ -160,9 +159,8 @@ export async function POST(request: Request) {
                   'createDocument',
                   'updateDocument',
                   'requestSuggestions',
-                  'sendToWhatsapp',
                 ],
-          experimental_transform: smoothStream({ chunking: 'word' }) as any,
+          experimental_transform: smoothStream({ chunking: 'word' }),
           experimental_generateMessageId: generateUUID,
           tools: {
             getWeather,
@@ -172,19 +170,6 @@ export async function POST(request: Request) {
               session,
               dataStream,
             }),
-            sendToWhatsapp: {
-              parameters: z.object({
-                message: z.string().describe('The message to send via WhatsApp'),
-              }),
-              execute: async ({ message }) => {
-                const encodedMessage = encodeURIComponent(message);
-                const whatsappUrl = `https://api.whatsapp.com/send/?phone=11945139833&text=${encodedMessage}&type=phone_number&app_absent=0`;
-                return {
-                  url: whatsappUrl,
-                  message: `Aqui está o link para enviar sua mensagem via WhatsApp: ${whatsappUrl}`,
-                };
-              },
-            },
           },
           onFinish: async ({ response }) => {
             if (session.user?.id) {

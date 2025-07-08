@@ -1,9 +1,9 @@
 'use client';
 
-import type { UseChatHelpers } from '@ai-sdk/react';
 import { motion } from 'framer-motion';
-import { memo } from 'react';
 import { Button } from './ui/button';
+import { memo } from 'react';
+import type { UseChatHelpers } from '@ai-sdk/react';
 import type { VisibilityType } from './visibility-selector';
 
 interface SuggestedActionsProps {
@@ -19,25 +19,25 @@ function PureSuggestedActions({
 }: SuggestedActionsProps) {
   const suggestedActions = [
     {
-      title: 'Estou com dor de cabeça',
-      label: 'pode me ajudar?',
-      action: 'Estou com dor de cabeça',
+      title: 'What are the advantages',
+      label: 'of using Next.js?',
+      action: 'What are the advantages of using Next.js?',
     },
     {
-      title: 'Faz dois dias que tenho dores no peito',
-      label: 'o que devo fazer?',
-      action: `Faz dois dias que tenho dores no peito`,
+      title: 'Write code to',
+      label: `demonstrate djikstra's algorithm`,
+      action: `Write code to demonstrate djikstra's algorithm`,
     },
-    // {
-    //   title: 'Help me write an essay',
-    //   label: `about silicon valley`,
-    //   action: `Help me write an essay about silicon valley`,
-    // },
-    // {
-    //   title: 'What is the weather',
-    //   label: 'in San Francisco?',
-    //   action: 'What is the weather in San Francisco?',
-    // },
+    {
+      title: 'Help me write an essay',
+      label: `about silicon valley`,
+      action: `Help me write an essay about silicon valley`,
+    },
+    {
+      title: 'What is the weather',
+      label: 'in San Francisco?',
+      action: 'What is the weather in San Francisco?',
+    },
   ];
 
   return (
