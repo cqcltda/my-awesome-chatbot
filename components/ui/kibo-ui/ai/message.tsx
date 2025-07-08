@@ -1,10 +1,5 @@
-import {
-  Avatar,
-  AvatarFallback,
-  AvatarImage,
-} from '@repo/shadcn-ui/components/ui/avatar';
-import type { ComponentProps, HTMLAttributes } from 'react';
 import { cn } from '@/lib/utils';
+import type { HTMLAttributes } from 'react';
 
 export type AIMessageProps = HTMLAttributes<HTMLDivElement> & {
   from: 'user' | 'assistant';
@@ -40,21 +35,4 @@ export const AIMessageContent = ({
   >
     <div className="is-user:dark">{children}</div>
   </div>
-);
-
-export type AIMessageAvatarProps = ComponentProps<typeof Avatar> & {
-  src: string;
-  name?: string;
-};
-
-export const AIMessageAvatar = ({
-  src,
-  name,
-  className,
-  ...props
-}: AIMessageAvatarProps) => (
-  <Avatar className={cn('size-8', className)} {...props}>
-    <AvatarImage alt="" className="mt-0 mb-0" src={src} />
-    <AvatarFallback>{name?.slice(0, 2) || 'ME'}</AvatarFallback>
-  </Avatar>
 );

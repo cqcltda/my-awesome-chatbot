@@ -16,12 +16,12 @@ import {
   CodeBlockSelectItem,
   CodeBlockSelectTrigger,
   CodeBlockSelectValue,
-} from '@repo/code-block';
+} from '@/components/ui/kibo-ui/code-block';
+import { cn } from '@/lib/utils';
 import type { HTMLAttributes } from 'react';
 import { memo } from 'react';
 import ReactMarkdown, { type Options } from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import { cn } from '@/lib/utils';
 
 export type AIResponseProps = HTMLAttributes<HTMLDivElement> & {
   options?: Options;
