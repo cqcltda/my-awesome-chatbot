@@ -31,8 +31,8 @@ import type { VisibilityType } from './visibility-selector';
 
 function PureMultimodalInput({
   chatId,
-  input: parentInput,
-  setInput: setParentInput,
+  input,
+  setInput,
   status,
   stop,
   attachments,
@@ -58,14 +58,8 @@ function PureMultimodalInput({
   className?: string;
   selectedVisibilityType: VisibilityType;
 }) {
-  const [localInput, setLocalInput] = useState('');
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const { width } = useWindowSize();
-
-  // Sync parent input with local input
-  useEffect(() => {
-    setLocalInput(parentInput);
-  }, [parentInput]);
 
   useEffect(() => {
     if (textareaRef.current) {
@@ -97,7 +91,7 @@ function PureMultimodalInput({
       const domValue = textareaRef.current.value;
       // Prefer DOM value over localStorage to handle hydration
       const finalValue = domValue || localStorageInput || '';
-      setLocalInput(finalValue);
+      setInput(finalValue);
       adjustHeight();
     }
     // Only run once after hydration
@@ -105,11 +99,11 @@ function PureMultimodalInput({
   }, []);
 
   useEffect(() => {
-    setLocalStorageInput(localInput);
-  }, [localInput, setLocalStorageInput]);
+    setLocalStorageInput(input);
+  }, [input, setLocalStorageInput]);
 
   const handleInput = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setLocalInput(event.target.value);
+    setInput(event.target.value);
     adjustHeight();
   };
 
@@ -117,31 +111,26 @@ function PureMultimodalInput({
   const [uploadQueue, setUploadQueue] = useState<Array<string>>([]);
 
   const submitForm = useCallback(() => {
-    append({
-      role: 'user',
-      content: localInput,
+    window.history.replaceState({}, '', `/chat/${chatId}`);
+
+    handleSubmit(undefined, {
       experimental_attachments: attachments,
     });
 
     setAttachments([]);
     setLocalStorageInput('');
-    setLocalInput('');
-    setParentInput('');
     resetHeight();
 
     if (width && width > 768) {
       textareaRef.current?.focus();
     }
   }, [
-    append,
     attachments,
+    handleSubmit,
     setAttachments,
     setLocalStorageInput,
     width,
     chatId,
-    setLocalInput,
-    setParentInput,
-    localInput,
   ]);
 
   const uploadFile = async (file: File) => {
@@ -281,7 +270,7 @@ function PureMultimodalInput({
         data-testid="multimodal-input"
         ref={textareaRef}
         placeholder="Escreva uma mensagem..."
-        value={localInput}
+        value={input}
         onChange={handleInput}
         className={cx(
           'min-h-[24px] max-h-[calc(75dvh)] overflow-hidden resize-none rounded-2xl !text-base bg-muted pb-10 dark:border-zinc-700',
@@ -316,7 +305,7 @@ function PureMultimodalInput({
           <StopButton stop={stop} setMessages={setMessages} />
         ) : (
           <SendButton
-            input={localInput}
+            input={input}
             submitForm={submitForm}
             uploadQueue={uploadQueue}
           />
