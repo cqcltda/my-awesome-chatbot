@@ -1,9 +1,10 @@
 'use client';
 
+import { ButtonSendToWhatsapp } from '@/components/button-send-to-whatsapp/button-send-to-whatsapp';
 import {
-    AIConversation,
-    AIConversationContent,
-    AIConversationScrollButton,
+  AIConversation,
+  AIConversationContent,
+  AIConversationScrollButton,
 } from '@/components/ui/kibo-ui/ai/conversation';
 import { AIMessage, AIMessageContent } from '@/components/ui/kibo-ui/ai/message';
 import { AIResponse } from '@/components/ui/kibo-ui/ai/response';
@@ -63,7 +64,19 @@ const ConversationWithResponse = memo(({ messages, status, chatId }: Conversatio
                   </motion.div>
                 );
               } else if (message.role === 'assistant') {
-                // Renderiza o conteúdo diretamente. O AI SDK já atualiza 'message.content' em tempo real.
+                // Verificar se há ferramentas na mensagem
+                const hasWhatsAppTool = message.parts?.some(part => 
+                  part.type === 'tool-invocation' && 
+                  (part as any).toolInvocation.toolName === 'sendToWhatsapp' &&
+                  (part as any).toolInvocation.state === 'result'
+                );
+
+                const whatsAppResult = message.parts?.find(part => 
+                  part.type === 'tool-invocation' && 
+                  (part as any).toolInvocation.toolName === 'sendToWhatsapp' &&
+                  (part as any).toolInvocation.state === 'result'
+                );
+
                 return (
                   <motion.div
                     key={message.id || index}
@@ -73,7 +86,17 @@ const ConversationWithResponse = memo(({ messages, status, chatId }: Conversatio
                     className="w-full mx-auto max-w-3xl px-4 group/message"
                   >
                     <AIMessage from="assistant">
-                      <AIResponse>{message.content}</AIResponse>
+                      <div className="flex flex-col gap-4">
+                        <AIResponse>{message.content}</AIResponse>
+                        {hasWhatsAppTool && whatsAppResult && (
+                          <div className="mt-4">
+                            <ButtonSendToWhatsapp
+                              text="Converse com um especialista"
+                              url={(whatsAppResult as any).toolInvocation.result?.url as string}
+                            />
+                          </div>
+                        )}
+                      </div>
                     </AIMessage>
                   </motion.div>
                 );

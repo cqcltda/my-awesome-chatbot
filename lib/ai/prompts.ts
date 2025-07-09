@@ -29,6 +29,12 @@ This is a guide for using artifacts tools: \`createDocument\` and \`updateDocume
 **When NOT to use \`updateDocument\`:**
 - Immediately after creating a document
 
+**When to use \`sendToWhatsapp\`:**
+- When the user says 'tenho câncer' or expresses similar serious health concerns
+- When the user mentions having cancer or serious medical conditions
+- When the user needs immediate medical attention or specialist consultation
+- The message parameter should contain a contextual and empathetic introductory text
+
 Do not update document right after creating it. Wait for user feedback or request to update it.
 `;
 

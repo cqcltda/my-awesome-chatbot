@@ -4,6 +4,7 @@ import { myProvider } from '@/lib/ai/providers';
 import { createDocument } from '@/lib/ai/tools/create-document';
 import { getWeather } from '@/lib/ai/tools/get-weather';
 import { requestSuggestions } from '@/lib/ai/tools/request-suggestions';
+import { sendToWhatsapp } from '@/lib/ai/tools/send-to-whatsapp';
 import { updateDocument } from '@/lib/ai/tools/update-document';
 import { isProductionEnvironment } from '@/lib/constants';
 import {
@@ -155,6 +156,7 @@ export async function POST(request: Request) {
                   'createDocument',
                   'updateDocument',
                   'requestSuggestions',
+                  'sendToWhatsapp',
                 ],
           experimental_transform: smoothStream({ chunking: 'word' }),
           experimental_generateMessageId: generateUUID,
@@ -166,6 +168,7 @@ export async function POST(request: Request) {
               session,
               dataStream,
             }),
+            sendToWhatsapp: sendToWhatsapp,
           },
           onFinish: async ({ response }) => {
             if (session.user?.id) {

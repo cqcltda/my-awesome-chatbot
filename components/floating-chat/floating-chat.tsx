@@ -73,6 +73,7 @@ const FloatingChat = ({ id,
     status,
     experimental_resume,
     data,
+    stop
   } = useChat({
     id,
     initialMessages,
@@ -205,7 +206,7 @@ const FloatingChat = ({ id,
               ]} onSuggestionClick={handleSuggestionClick} />
             )}
 
-            <Input onSubmit={submitForm} inputValue={input} setInput={setInput} status={status} />
+            <Input onSubmit={submitForm} inputValue={input} setInput={setInput} status={status} stop={stop} />
           </div>
         </form>
       </CardFooter>

@@ -14,9 +14,10 @@ interface Props {
   inputValue: string;
   setInput: (input: string) => void;
   status?: 'submitted' | 'streaming' | 'ready' | 'error';
+  stop: () => void;
 }
 
-const Input = memo(({ onSubmit, setInput, inputValue, status: externalStatus }: Props) => {
+const Input = memo(({ onSubmit, setInput, inputValue, status: externalStatus, stop }: Props) => {
   const status = externalStatus
 
   const textareaRef = React.useRef<HTMLTextAreaElement>(null);
@@ -47,6 +48,11 @@ const Input = memo(({ onSubmit, setInput, inputValue, status: externalStatus }: 
   };
 
   const handleButtonClick = () => {
+    if (status === 'streaming') {
+      stop();
+      return;
+    }
+
     onSubmit();
   };
 
