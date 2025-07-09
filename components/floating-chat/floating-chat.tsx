@@ -148,7 +148,7 @@ const FloatingChat = ({ id,
   }, [isDesktop, handleSubmit]);
 
   const renderChatContent = () => (
-    <Card className="size-full border-0 md:border flex flex-col">
+    <Card className="size-full border-0 md:border flex flex-col max-h-[90vh]">
       <CardHeader className="shrink-0 ">
         <div className="w-full flex justify-between items-center">
         <h1 className="text-2xl font-bold">IA Médica</h1>
@@ -157,9 +157,9 @@ const FloatingChat = ({ id,
         </Button>
         </div>
       </CardHeader>
-      <CardContent className="flex-1 overflow-hidden p-0">
+      <CardContent className="flex-1 overflow-hidden max-h-[80vh] p-0">
         <ScrollArea 
-          className="size-full pr-4"
+          className="size-full overflow-y-auto max-h-[80vh] pr-4"
           ref={scrollRef}
           onScroll={handleScroll}
         >

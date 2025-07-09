@@ -9,7 +9,7 @@ export const sendToWhatsapp = tool({
   execute: async ({ message }) => {
     // Gera a URL do WhatsApp com a mensagem pré-preenchida
     const encodedMessage = encodeURIComponent(message);
-    const whatsappUrl = `https://api.whatsapp.com/send/?phone=11945139833&text=${encodedMessage}&type=phone_number&app_absent=0`;
+    const whatsappUrl = `https://api.whatsapp.com/send/?phone=+5511945139833&text=${encodedMessage}&type=phone_number&app_absent=0`;
     
     return {
       url: whatsappUrl,
