@@ -18,15 +18,6 @@ export const useConditionalScroll = (messages: UIMessage[]) => {
         const isOverflowing = scrollElement.scrollHeight > scrollElement.clientHeight;
         const isAtBottom = scrollElement.scrollHeight - scrollElement.scrollTop <= scrollElement.clientHeight + 5; // +5 para tolerância
 
-        console.log('Scroll Debug:', {
-          scrollHeight: scrollElement.scrollHeight,
-          clientHeight: scrollElement.clientHeight,
-          scrollTop: scrollElement.scrollTop,
-          isOverflowing,
-          isAtBottom,
-          shouldShowButton: isOverflowing && !isAtBottom
-        });
-
         setShowScrollButton(isOverflowing && !isAtBottom);
       }
     }
@@ -61,7 +52,6 @@ export const useConditionalScroll = (messages: UIMessage[]) => {
       const scrollElement = viewport || element;
       
       if (scrollElement) {
-        console.log('Scrolling to bottom...');
         scrollElement.scrollTo({
           top: scrollElement.scrollHeight,
           behavior: 'smooth',

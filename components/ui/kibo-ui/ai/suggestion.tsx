@@ -1,9 +1,9 @@
 'use client';
 
-import type { ComponentProps } from 'react';
 import { Button } from '@/components/ui/button';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
+import type { ComponentProps } from 'react';
 
 export type AISuggestionsProps = ComponentProps<typeof ScrollArea>;
 
@@ -24,7 +24,10 @@ export type AISuggestionProps = Omit<
   ComponentProps<typeof Button>,
   'onClick'
 > & {
-  suggestion: string;
+  suggestion: {
+    title: string;
+    label: string;
+  };
   onClick?: (suggestion: string) => void;
 };
 
@@ -38,19 +41,22 @@ export const AISuggestion = ({
   ...props
 }: AISuggestionProps) => {
   const handleClick = () => {
-    onClick?.(suggestion);
+    onClick?.(suggestion.title + ' ' + suggestion.label);
   };
 
   return (
     <Button
-      className={cn('cursor-pointer rounded-full px-4', className)}
+      className={cn('cursor-pointer rounded-xl py-2 px-4 flex flex-col gap-1 items-start h-auto', className)}
       onClick={handleClick}
       size={size}
       type="button"
       variant={variant}
       {...props}
     >
-      {children || suggestion}
+      <span className="font-medium">{suggestion.title}</span>
+      <span className="text-muted-foreground">
+        {suggestion.label}
+      </span>
     </Button>
   );
 };

@@ -7,30 +7,30 @@ import { requestSuggestions } from '@/lib/ai/tools/request-suggestions';
 import { updateDocument } from '@/lib/ai/tools/update-document';
 import { isProductionEnvironment } from '@/lib/constants';
 import {
-    createStreamId,
-    deleteChatById,
-    getChatById,
-    getMessagesByChatId,
-    getStreamIdsByChatId,
-    saveChat,
-    saveMessages
+  createStreamId,
+  deleteChatById,
+  getChatById,
+  getMessagesByChatId,
+  getStreamIdsByChatId,
+  saveChat,
+  saveMessages
 } from '@/lib/db/queries';
 import type { Chat } from '@/lib/db/schema';
 import { ChatSDKError } from '@/lib/errors';
 import { generateUUID, getTrailingMessageId } from '@/lib/utils';
 import { geolocation } from '@vercel/functions';
 import {
-    appendClientMessage,
-    appendResponseMessages,
-    createDataStream,
-    smoothStream,
-    streamText,
+  appendClientMessage,
+  appendResponseMessages,
+  createDataStream,
+  smoothStream,
+  streamText,
 } from 'ai';
 import { differenceInSeconds } from 'date-fns';
 import { after } from 'next/server';
 import {
-    createResumableStreamContext,
-    type ResumableStreamContext,
+  createResumableStreamContext,
+  type ResumableStreamContext,
 } from 'resumable-stream';
 import { generateTitleFromUserMessage } from '../../actions';
 import { postRequestBodySchema, type PostRequestBody } from './schema';
@@ -47,9 +47,6 @@ function getStreamContext() {
       });
     } catch (error: any) {
       if (error.message.includes('REDIS_URL')) {
-        console.log(
-          ' > Resumable streams are disabled due to missing REDIS_URL',
-        );
       } else {
         console.error(error);
       }

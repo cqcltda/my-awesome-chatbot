@@ -4,7 +4,10 @@ import { AISuggestion, AISuggestions } from '@/components/ui/kibo-ui/ai/suggesti
 import { memo } from 'react';
 
 interface Props {
-  suggestions: string[];
+  suggestions: {
+    title: string;
+    label: string;
+  }[];
   onSuggestionClick: (suggestion: string) => void;
 }
 
@@ -13,7 +16,7 @@ const Suggestions = memo(({ suggestions, onSuggestionClick }: Props) => {
     <AISuggestions>
       {suggestions.map((suggestion) => (
         <AISuggestion
-          key={suggestion}
+          key={suggestion.title + suggestion.label}
           onClick={onSuggestionClick}
           suggestion={suggestion}
         />

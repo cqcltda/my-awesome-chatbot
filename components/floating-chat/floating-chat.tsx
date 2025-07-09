@@ -112,20 +112,14 @@ const FloatingChat = ({ id,
       });
 
       setHasAppendedQuery(true);
-      // Removido o redirecionamento de URL para manter o chat como widget flutuante
-      // window.history.replaceState({}, '', `/chat/${id}`);
     }
   }, [query, append, hasAppendedQuery, id]);
 
-  // Use o novo hook após as mensagens serem declaradas
   const { scrollRef, showScrollButton, scrollToBottom, handleScroll } = useConditionalScroll(messages);
 
-  // Debug para verificar se o botão deve aparecer
-  console.log('FloatingChat Debug:', {
-    showScrollButton,
-    messagesLength: messages.length,
-    shouldShow: showScrollButton && messages.length > 0
-  });
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages, status, scrollToBottom]);
 
   useAutoResume({
     autoResume,
@@ -136,7 +130,10 @@ const FloatingChat = ({ id,
   });
 
   const handleSuggestionClick = (suggestion: string) => {
-    setInput(suggestion);
+    append({
+      role: 'user',
+      content: suggestion,
+    });
   };
 
   const submitForm = React.useCallback(() => {
@@ -144,9 +141,7 @@ const FloatingChat = ({ id,
       experimental_attachments: [],
     });
 
-    // Se não for desktop (ou seja, for mobile) e houver um elemento focado
     if (!isDesktop && document.activeElement instanceof HTMLElement) {
-      // Remove o foco, o que fecha o teclado
       document.activeElement.blur();
     }
   }, [isDesktop, handleSubmit]);
@@ -178,7 +173,7 @@ const FloatingChat = ({ id,
         <form className="flex bg-background pb-4 sm:pb-6 gap-2 w-full sm:max-w-3xl">
           <div className="relative w-full flex flex-col gap-4">
             <AnimatePresence>
-              {showScrollButton && messages.length > 0 && (
+              {messages.length > 0 && (
                 <motion.div
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -204,9 +199,9 @@ const FloatingChat = ({ id,
 
             {messages.length === 0 && (
               <Suggestions suggestions={[
-                'Estou com dor de cabeça, pode me ajudar?',
-                'Faz dois dias que tenho dores no peito, o que devo fazer?',
-                'Tenho dor de cabeça e estou com febre, o que devo fazer?',
+                {title:'Estou com dor de cabeça', label:'pode me ajudar?'},
+                {title:'Faz dois dias que tenho dores no peito', label:'o que devo fazer?'},
+                {title:'Tenho dor de cabeça e estou com febre', label:'o que devo fazer?'},
               ]} onSuggestionClick={handleSuggestionClick} />
             )}
 
