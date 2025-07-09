@@ -3,7 +3,7 @@
 import { ArrowDown, MessageSquare, X } from "lucide-react"
 import * as React from "react"
 
-import { useArtifactSelector, useAutoResume, useChatVisibility, useConditionalScroll, useMediaQuery } from "@/hooks"
+import { useAutoResume, useChatVisibility, useConditionalScroll, useMediaQuery } from "@/hooks"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -14,9 +14,7 @@ import {
 } from "@/components/ui/card"
 import {
   Drawer,
-  DrawerClose,
   DrawerContent,
-  DrawerFooter,
   DrawerHeader,
   DrawerTitle,
   DrawerTrigger
@@ -27,16 +25,14 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { Vote } from "@/lib/db/schema"
 import { ChatSDKError } from '@/lib/errors'
-import { fetcher, fetchWithErrorHandlers, generateUUID } from '@/lib/utils'
+import { fetchWithErrorHandlers, generateUUID } from '@/lib/utils'
 import { useChat } from '@ai-sdk/react'
 import type { UIMessage } from 'ai'
 import { AnimatePresence, motion } from "framer-motion"
-import type { Session } from 'next-auth'
 import { useSearchParams } from 'next/navigation'
 import { useEffect, useState } from 'react'
-import useSWR, { useSWRConfig } from 'swr'
+import { useSWRConfig } from 'swr'
 import { unstable_serialize } from 'swr/infinite'
 import { Input, Suggestions } from "../ai"
 import { ConversationWithResponse } from "../ai/conversation-with-response"
@@ -49,8 +45,6 @@ interface Props {
   initialMessages: Array<UIMessage>;
   initialChatModel: string;
   initialVisibilityType: VisibilityType;
-  isReadonly: boolean;
-  session: Session;
   autoResume: boolean;
 }
 
@@ -58,8 +52,6 @@ const FloatingChat = ({ id,
   initialMessages,
   initialChatModel,
   initialVisibilityType,
-  isReadonly,
-  session,
   autoResume, }: Props) => {
   const [open, setOpen] = React.useState(false)
   const isDesktop = useMediaQuery("(min-width: 768px)")
@@ -79,8 +71,6 @@ const FloatingChat = ({ id,
     setInput,
     append,
     status,
-    stop,
-    reload,
     experimental_resume,
     data,
   } = useChat({
@@ -127,15 +117,15 @@ const FloatingChat = ({ id,
     }
   }, [query, append, hasAppendedQuery, id]);
 
-  const { data: votes } = useSWR<Array<Vote>>(
-    messages.length >= 2 ? `/api/vote?chatId=${id}` : null,
-    fetcher,
-  );
-
-  const isArtifactVisible = useArtifactSelector((state) => state.isVisible);
-
   // Use o novo hook após as mensagens serem declaradas
   const { scrollRef, showScrollButton, scrollToBottom, handleScroll } = useConditionalScroll(messages);
+
+  // Debug para verificar se o botão deve aparecer
+  console.log('FloatingChat Debug:', {
+    showScrollButton,
+    messagesLength: messages.length,
+    shouldShow: showScrollButton && messages.length > 0
+  });
 
   useAutoResume({
     autoResume,
@@ -163,8 +153,13 @@ const FloatingChat = ({ id,
 
   const renderChatContent = () => (
     <Card className="size-full border-0 md:border flex flex-col">
-      <CardHeader className="shrink-0">
-      <h1 className="text-2xl font-bold">IA Médica</h1>
+      <CardHeader className="shrink-0 ">
+        <div className="w-full flex justify-between items-center">
+        <h1 className="text-2xl font-bold">IA Médica</h1>
+        <Button variant="outline" size="icon">
+          <X className="size-6" />
+        </Button>
+        </div>
       </CardHeader>
       <CardContent className="flex-1 overflow-hidden p-0">
         <ScrollArea 
@@ -179,7 +174,7 @@ const FloatingChat = ({ id,
           />
         </ScrollArea>
       </CardContent>
-      <CardFooter className="shrink-0">
+      <CardFooter className="shrink-0 relative">
         <form className="flex bg-background pb-4 sm:pb-6 gap-2 w-full sm:max-w-3xl">
           <div className="relative w-full flex flex-col gap-4">
             <AnimatePresence>
@@ -193,7 +188,7 @@ const FloatingChat = ({ id,
                 >
                   <Button
                     data-testid="scroll-to-bottom-button"
-                    className="rounded-full"
+                    className="rounded-full shadow-lg bg-background border-2 hover:bg-accent"
                     size="icon"
                     variant="outline"
                     onClick={(event) => {
@@ -201,7 +196,7 @@ const FloatingChat = ({ id,
                       scrollToBottom();
                     }}
                   >
-                    <ArrowDown />
+                    <ArrowDown className="size-4" />
                   </Button>
                 </motion.div>
               )}
@@ -265,11 +260,6 @@ const FloatingChat = ({ id,
         <div className="flex flex-col h-full">
           {renderChatContent()}
         </div>
-        <DrawerFooter className="pt-2 sm:hidden">
-          <DrawerClose asChild>
-            <Button variant="outline">Fechar</Button>
-          </DrawerClose>
-        </DrawerFooter>
       </DrawerContent>
     </Drawer>
   )

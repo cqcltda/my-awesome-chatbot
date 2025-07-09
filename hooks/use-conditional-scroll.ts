@@ -16,7 +16,7 @@ export const useConditionalScroll = (messages: UIMessage[]) => {
       
       if (scrollElement) {
         const isOverflowing = scrollElement.scrollHeight > scrollElement.clientHeight;
-        const isAtBottom = scrollElement.scrollHeight - scrollElement.scrollTop <= scrollElement.clientHeight + 1; // +1 para tolerância
+        const isAtBottom = scrollElement.scrollHeight - scrollElement.scrollTop <= scrollElement.clientHeight + 5; // +5 para tolerância
 
         console.log('Scroll Debug:', {
           scrollHeight: scrollElement.scrollHeight,
@@ -38,6 +38,20 @@ export const useConditionalScroll = (messages: UIMessage[]) => {
     const timer = setTimeout(handleScroll, 100);
     return () => clearTimeout(timer);
   }, [messages, handleScroll]);
+
+  // Adiciona listener de scroll
+  useEffect(() => {
+    const element = scrollRef.current;
+    if (element) {
+      const viewport = element.querySelector('[data-radix-scroll-area-viewport]') as HTMLElement;
+      const scrollElement = viewport || element;
+      
+      if (scrollElement) {
+        scrollElement.addEventListener('scroll', handleScroll);
+        return () => scrollElement.removeEventListener('scroll', handleScroll);
+      }
+    }
+  }, [handleScroll]);
 
   const scrollToBottom = () => {
     const element = scrollRef.current;

@@ -1,41 +1,39 @@
-import {
-  appendClientMessage,
-  appendResponseMessages,
-  createDataStream,
-  smoothStream,
-  streamText,
-} from 'ai';
 import { auth, type UserType } from '@/app/(auth)/auth';
-import { type RequestHints, systemPrompt } from '@/lib/ai/prompts';
-import {
-  createStreamId,
-  deleteChatById,
-  getChatById,
-  getMessageCountByUserId,
-  getMessagesByChatId,
-  getStreamIdsByChatId,
-  saveChat,
-  saveMessages,
-} from '@/lib/db/queries';
-import { generateUUID, getTrailingMessageId } from '@/lib/utils';
-import { generateTitleFromUserMessage } from '../../actions';
-import { createDocument } from '@/lib/ai/tools/create-document';
-import { updateDocument } from '@/lib/ai/tools/update-document';
-import { requestSuggestions } from '@/lib/ai/tools/request-suggestions';
-import { getWeather } from '@/lib/ai/tools/get-weather';
-import { isProductionEnvironment } from '@/lib/constants';
+import { systemPrompt, type RequestHints } from '@/lib/ai/prompts';
 import { myProvider } from '@/lib/ai/providers';
-import { entitlementsByUserType } from '@/lib/ai/entitlements';
-import { postRequestBodySchema, type PostRequestBody } from './schema';
+import { createDocument } from '@/lib/ai/tools/create-document';
+import { getWeather } from '@/lib/ai/tools/get-weather';
+import { requestSuggestions } from '@/lib/ai/tools/request-suggestions';
+import { updateDocument } from '@/lib/ai/tools/update-document';
+import { isProductionEnvironment } from '@/lib/constants';
+import {
+    createStreamId,
+    deleteChatById,
+    getChatById,
+    getMessagesByChatId,
+    getStreamIdsByChatId,
+    saveChat,
+    saveMessages
+} from '@/lib/db/queries';
+import type { Chat } from '@/lib/db/schema';
+import { ChatSDKError } from '@/lib/errors';
+import { generateUUID, getTrailingMessageId } from '@/lib/utils';
 import { geolocation } from '@vercel/functions';
 import {
-  createResumableStreamContext,
-  type ResumableStreamContext,
-} from 'resumable-stream';
-import { after } from 'next/server';
-import type { Chat } from '@/lib/db/schema';
+    appendClientMessage,
+    appendResponseMessages,
+    createDataStream,
+    smoothStream,
+    streamText,
+} from 'ai';
 import { differenceInSeconds } from 'date-fns';
-import { ChatSDKError } from '@/lib/errors';
+import { after } from 'next/server';
+import {
+    createResumableStreamContext,
+    type ResumableStreamContext,
+} from 'resumable-stream';
+import { generateTitleFromUserMessage } from '../../actions';
+import { postRequestBodySchema, type PostRequestBody } from './schema';
 
 export const maxDuration = 60;
 
@@ -83,14 +81,15 @@ export async function POST(request: Request) {
 
     const userType: UserType = session.user.type;
 
-    const messageCount = await getMessageCountByUserId({
-      id: session.user.id,
-      differenceInHours: 24,
-    });
+    // Comentado: verificação de limite de mensagens para uso com API key própria
+    // const messageCount = await getMessageCountByUserId({
+    //   id: session.user.id,
+    //   differenceInHours: 24,
+    // });
 
-    if (messageCount > entitlementsByUserType[userType].maxMessagesPerDay) {
-      return new ChatSDKError('rate_limit:chat').toResponse();
-    }
+    // if (messageCount > entitlementsByUserType[userType].maxMessagesPerDay) {
+    //   return new ChatSDKError('rate_limit:chat').toResponse();
+    // }
 
     const chat = await getChatById({ id });
 

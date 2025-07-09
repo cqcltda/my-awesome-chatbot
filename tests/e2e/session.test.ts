@@ -1,8 +1,6 @@
 import { expect, test } from '../fixtures';
-import { AuthPage } from '../pages/auth';
 import { generateRandomTestUser } from '../helpers';
-import { ChatPage } from '../pages/chat';
-import { getMessageByErrorCode } from '@/lib/errors';
+import { AuthPage } from '../pages/auth';
 
 test.describe
   .serial('Guest Session', () => {
@@ -185,24 +183,25 @@ test.describe
     });
   });
 
-test.describe('Entitlements', () => {
-  let chatPage: ChatPage;
+// Comentado: teste de entitlements desabilitado para uso com API key própria
+// test.describe('Entitlements', () => {
+//   let chatPage: ChatPage;
 
-  test.beforeEach(async ({ page }) => {
-    chatPage = new ChatPage(page);
-  });
+//   test.beforeEach(async ({ page }) => {
+//     chatPage = new ChatPage(page);
+//   });
 
-  test('Guest user cannot send more than 20 messages/day', async () => {
-    await chatPage.createNewChat();
+//   test('Guest user cannot send more than 20 messages/day', async () => {
+//     await chatPage.createNewChat();
 
-    for (let i = 0; i <= 20; i++) {
-      await chatPage.sendUserMessage('Why is the sky blue?');
-      await chatPage.isGenerationComplete();
-    }
+//     for (let i = 0; i <= 20; i++) {
+//       await chatPage.sendUserMessage('Why is the sky blue?');
+//       await chatPage.isGenerationComplete();
+//     }
 
-    await chatPage.sendUserMessage('Why is the sky blue?');
-    await chatPage.expectToastToContain(
-      getMessageByErrorCode('rate_limit:chat'),
-    );
-  });
-});
+//     await chatPage.sendUserMessage('Why is the sky blue?');
+//     await chatPage.expectToastToContain(
+//       getMessageByErrorCode('rate_limit:chat'),
+//     );
+//   });
+// });
