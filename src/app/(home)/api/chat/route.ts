@@ -7,10 +7,10 @@ import { ChatSDKError } from '@/lib/errors';
 import { generateUUID } from '@/lib/utils';
 import { geolocation } from '@vercel/functions';
 import {
-    appendClientMessage,
-    createDataStream,
-    smoothStream,
-    streamText
+  appendClientMessage,
+  createDataStream,
+  smoothStream,
+  streamText
 } from 'ai';
 import { postRequestBodySchema, type PostRequestBody } from './schema';
 
@@ -27,7 +27,7 @@ export async function POST(request: Request) {
   }
 
   try {
-    const { id, message, selectedChatModel } = requestBody;
+    const { id, message, selectedChatModel, userInfo } = requestBody;
 
     const messages = appendClientMessage({
       messages: [],
@@ -47,7 +47,7 @@ export async function POST(request: Request) {
       execute: (dataStream) => {
         const result = streamText({
           model: myProvider.languageModel(selectedChatModel),
-          system: systemPrompt({ selectedChatModel, requestHints }),
+          system: systemPrompt({ selectedChatModel, requestHints, userInfo }),
           messages,
           maxSteps: 5,
           experimental_activeTools: [

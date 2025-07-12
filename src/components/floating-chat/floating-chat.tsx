@@ -3,7 +3,7 @@
 import { ArrowDown, MessageSquare, X } from "lucide-react"
 import * as React from "react"
 
-import { useAutoResume, useConditionalScroll, useMediaQuery } from "@/hooks"
+import { useAutoResume, useConditionalScroll, useMediaQuery, useUserInfo } from "@/hooks"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -49,6 +49,9 @@ const FloatingChat = ({ id,
   autoResume, }: Props) => {
   const [open, setOpen] = React.useState(false)
   const isDesktop = useMediaQuery("(min-width: 768px)")
+  
+  // Hook para gerenciar informações do usuário
+  const { userInfo, saveUserInfo } = useUserInfo();
 
   const {
     messages,
@@ -73,6 +76,7 @@ const FloatingChat = ({ id,
       message: body.messages.at(-1),
       selectedChatModel: initialChatModel,
       selectedVisibilityType: 'private',
+      userInfo, // Enviando informações do usuário para a API
     }),
     onError: (error) => {
       if (error instanceof ChatSDKError) {
@@ -80,6 +84,19 @@ const FloatingChat = ({ id,
           type: 'error',
           description: error.message,
         });
+      }
+    },
+    onFinish: (message) => {
+      // Processar a resposta da IA para extrair informações do usuário
+      try {
+        const content = message.content;
+        const jsonMatch = content.match(/```json\n([\s\S]*?)\n```/);
+        if (jsonMatch && jsonMatch[1]) {
+          const newUserInfo = JSON.parse(jsonMatch[1]);
+          saveUserInfo(newUserInfo);
+        }
+      } catch (error) {
+        console.error("Failed to parse user info from AI response", error);
       }
     },
   });

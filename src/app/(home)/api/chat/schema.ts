@@ -5,6 +5,18 @@ const textPartSchema = z.object({
   type: z.enum(['text']),
 });
 
+// Schema para as informações do usuário
+const userInfoSchema = z.object({
+  name: z.string().optional(),
+  age: z.number().optional(),
+  gender: z.string().optional(),
+  weight: z.number().optional(),
+  height: z.number().optional(),
+  profession: z.string().optional(),
+  location: z.string().optional(),
+  contact: z.string().optional(),
+});
+
 export const postRequestBodySchema = z.object({
   id: z.string().uuid(),
   message: z.object({
@@ -25,6 +37,7 @@ export const postRequestBodySchema = z.object({
   }),
   selectedChatModel: z.enum(['chat-model']),
   selectedVisibilityType: z.enum(['public', 'private']),
+  userInfo: userInfoSchema.optional(),
 });
 
 export type PostRequestBody = z.infer<typeof postRequestBodySchema>;

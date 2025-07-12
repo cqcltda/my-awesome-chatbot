@@ -22,7 +22,7 @@ export const sendToWhatsapp = tool({
     profession: z.string().describe('Profissão do paciente.'),
   }),
   execute: async ({ name, age, gender, weight, height, profession }) => {
-    const phoneNumber = '11945139833'; // Número do consultório do Dr. Bernardo
+    const phoneNumber = '+5511945139833'; // Número do consultório do Dr. Bernardo
 
     const greeting = 'Olá, fiz um atendimento inicial com a IA médica e gostaria de agendar uma consulta com o Dr. Bernardo. Segue minhas informações abaixo:';
     const patientInfo = [
