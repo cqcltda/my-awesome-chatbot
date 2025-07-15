@@ -3,26 +3,26 @@
 import { ArrowDown, MessageSquare, X } from "lucide-react"
 import * as React from "react"
 
-import { useAutoResume, useConditionalScroll, useMediaQuery, useUserInfo } from "@/hooks"
+import { useAutoResume, useChatStep, useConditionalScroll, useMediaQuery, useUserInfo } from "@/hooks"
 
 import { Button } from "@/components/ui/button"
 import {
-  Card,
-  CardContent,
-  CardFooter,
-  CardHeader
+    Card,
+    CardContent,
+    CardFooter,
+    CardHeader
 } from "@/components/ui/card"
 import {
-  Drawer,
-  DrawerContent,
-  DrawerHeader,
-  DrawerTitle,
-  DrawerTrigger
+    Drawer,
+    DrawerContent,
+    DrawerHeader,
+    DrawerTitle,
+    DrawerTrigger
 } from "@/components/ui/drawer"
 import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
+    Popover,
+    PopoverContent,
+    PopoverTrigger,
 } from "@/components/ui/popover"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { ChatSDKError } from '@/lib/errors'
@@ -52,6 +52,9 @@ const FloatingChat = ({ id,
   
   // Hook para gerenciar informações do usuário
   const { userInfo, saveUserInfo } = useUserInfo();
+  
+  // Hook para gerenciar o estado da etapa da conversa
+  const { chatStep, updateChatStep } = useChatStep(id);
 
   const {
     messages,
@@ -77,6 +80,7 @@ const FloatingChat = ({ id,
       selectedChatModel: initialChatModel,
       selectedVisibilityType: 'private',
       userInfo, // Enviando informações do usuário para a API
+      chatStep, // Enviando o estado atual da etapa para a API
     }),
     onError: (error) => {
       if (error instanceof ChatSDKError) {
@@ -86,19 +90,19 @@ const FloatingChat = ({ id,
         });
       }
     },
-    onFinish: (message) => {
-      // Processar a resposta da IA para extrair informações do usuário
-      try {
-        const content = message.content;
-        const jsonMatch = content.match(/```json\n([\s\S]*?)\n```/);
-        if (jsonMatch && jsonMatch[1]) {
-          const newUserInfo = JSON.parse(jsonMatch[1]);
-          saveUserInfo(newUserInfo);
-        }
-      } catch (error) {
-        console.error("Failed to parse user info from AI response", error);
+    onToolCall: ({ toolCall }) => {
+      // Ferramenta para transição de estado
+      if (toolCall.toolName === 'updateChatStep') {
+        const { nextStep } = toolCall.args as { nextStep: string };
+        updateChatStep(nextStep as any);
+      }
+      
+      // NOVO: Ferramenta para salvar dados do usuário
+      if (toolCall.toolName === 'updateUserInfo') {
+        saveUserInfo(toolCall.args as any); // Salva todos os novos dados de uma vez
       }
     },
+
   });
 
   const searchParams = useSearchParams();

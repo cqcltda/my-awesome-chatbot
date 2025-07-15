@@ -15,6 +15,9 @@ const userInfoSchema = z.object({
   profession: z.string().optional(),
   location: z.string().optional(),
   contact: z.string().optional(),
+  mainComplaint: z.string().optional(),
+  duration: z.string().optional(),
+  intensity: z.number().optional(),
 });
 
 export const postRequestBodySchema = z.object({
@@ -38,6 +41,7 @@ export const postRequestBodySchema = z.object({
   selectedChatModel: z.enum(['chat-model']),
   selectedVisibilityType: z.enum(['public', 'private']),
   userInfo: userInfoSchema.optional(),
+  chatStep: z.enum(['GATHERING_INFO', 'MEDICAL_EVALUATION', 'TRIAGE', 'DECISION', 'FINAL_RECOMMENDATION']).optional(),
 });
 
 export type PostRequestBody = z.infer<typeof postRequestBodySchema>;

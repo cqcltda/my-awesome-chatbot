@@ -2,26 +2,19 @@ import { tool } from 'ai';
 import { z } from 'zod';
 
 export const sendToWhatsapp = tool({
-  description: `
-    Encaminha o paciente para o WhatsApp para agendar uma consulta.
-    Esta ferramenta DEVE ser usada QUANDO o encaminhamento para um médico for necessário.
-    Você DEVE coletar as seguintes informações do usuário ANTES de chamar esta ferramenta:
-    - Nome (name)
-    - Idade (age)
-    - Sexo (gender)
-    - Peso (weight)
-    - Altura (height)
-    - Profissão (profession)
-  `,
+  description: `Encaminha o paciente para o WhatsApp para agendar uma consulta. Esta ferramenta DEVE ser usada QUANDO o encaminhamento para um médico for necessário. Ela recebe todas as informações do paciente de uma vez.`,
   parameters: z.object({
-    name: z.string().describe('Nome completo do paciente.'),
-    age: z.number().describe('Idade do paciente.'),
-    gender: z.string().describe('Sexo do paciente.'),
-    weight: z.number().describe('Peso do paciente em kg.'),
-    height: z.number().describe('Altura do paciente em metros.'),
-    profession: z.string().describe('Profissão do paciente.'),
+    userInfo: z.object({
+      name: z.string().describe('Nome completo do paciente.'),
+      age: z.number().describe('Idade do paciente.'),
+      gender: z.string().describe('Sexo do paciente.'),
+      weight: z.number().describe('Peso do paciente em kg.'),
+      height: z.number().describe('Altura do paciente em metros.'),
+      profession: z.string().describe('Profissão do paciente.'),
+    }),
   }),
-  execute: async ({ name, age, gender, weight, height, profession }) => {
+  execute: async ({ userInfo }) => { // Recebe o objeto userInfo
+    const { name, age, gender, weight, height, profession } = userInfo;
     const phoneNumber = '+5511945139833'; // Número do consultório do Dr. Bernardo
 
     const greeting = 'Olá, fiz um atendimento inicial com a IA médica e gostaria de agendar uma consulta com o Dr. Bernardo. Segue minhas informações abaixo:';
@@ -39,9 +32,7 @@ export const sendToWhatsapp = tool({
 
     return {
       url,
-      phoneNumber,
-      text: decodeURIComponent(text), // Retorna o texto decodificado para exibição
-      message: `Link para o WhatsApp gerado com sucesso com os dados do paciente.`,
+      message: `Tudo pronto! Para agendar sua consulta com o Dr. Bernardo, clique no botão abaixo.`,
     };
   },
 }); 
