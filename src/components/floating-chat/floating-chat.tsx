@@ -124,8 +124,10 @@ const FloatingChat = ({ id,
   const { scrollRef, showScrollButton, scrollToBottom, handleScroll } = useConditionalScroll(messages);
 
   useEffect(() => {
-    scrollToBottom();
-  }, [messages, status, scrollToBottom]);
+    if (status === 'streaming' || !showScrollButton) {
+      scrollToBottom();
+    }
+  }, [messages, status, scrollToBottom, showScrollButton]);
 
   useAutoResume({
     autoResume,
@@ -146,6 +148,14 @@ const FloatingChat = ({ id,
     setOpen(false);
   }
 
+  const handleInputFocus = () => {
+    if (!isDesktop) {
+      setTimeout(() => {
+        scrollToBottom();
+      }, 30);
+    }
+  };
+
   const submitForm = React.useCallback(() => {
     handleSubmit(undefined, {
       experimental_attachments: [],
@@ -157,8 +167,8 @@ const FloatingChat = ({ id,
   }, [isDesktop, handleSubmit]);
 
   const renderChatContent = () => (
-    <Card className="size-full border-0 md:border flex flex-col max-h-[90vh]">
-      <CardHeader className="shrink-0 ">
+    <Card className="w-full border-0 md:border grid grid-rows-[auto_1fr_auto] max-h-[90vh]">
+      <CardHeader className="shrink-0">
         <div className="w-full flex justify-between items-center">
         <h1 className="text-2xl font-bold">IA Médica</h1>
         <Button variant="outline" size="icon" onClick={handleCloseChat}>
@@ -166,24 +176,26 @@ const FloatingChat = ({ id,
         </Button>
         </div>
       </CardHeader>
-      <CardContent className="flex-1 overflow-hidden max-h-[80vh] p-0">
+      <CardContent className="min-h-0 overflow-hidden p-0">
         <ScrollArea 
-          className="size-full overflow-y-auto max-h-[80vh] pr-4"
+          className="size-full"
           ref={scrollRef}
           onScroll={handleScroll}
         >
-          <ConversationWithResponse
-            messages={messages}
-            status={status}
-            chatId={id}
-          />
+          <div className="p-4">
+            <ConversationWithResponse
+              messages={messages}
+              status={status}
+              chatId={id}
+            />
+          </div>
         </ScrollArea>
       </CardContent>
       <CardFooter className="shrink-0 relative">
         <form onSubmit={submitForm} className="flex bg-background pb-4 sm:pb-6 gap-2 w-full sm:max-w-3xl">
           <div className="relative w-full flex flex-col gap-4">
             <AnimatePresence>
-              {messages.length > 0 && (
+              {showScrollButton && (
                 <motion.div
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -215,7 +227,14 @@ const FloatingChat = ({ id,
               ]} onSuggestionClick={handleSuggestionClick} />
             )}
 
-            <Input onSubmit={submitForm} inputValue={input} setInput={setInput} status={status} stop={stop} />
+            <Input 
+              onSubmit={submitForm} 
+              inputValue={input} 
+              setInput={setInput} 
+              status={status} 
+              stop={stop} 
+              onFocus={handleInputFocus}
+            />
           </div>
         </form>
       </CardFooter>

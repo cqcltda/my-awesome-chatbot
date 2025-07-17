@@ -1,9 +1,9 @@
 'use client';
 
 import {
-  AIInputSubmit,
-  AIInputTextarea,
-  AIInputToolbar
+    AIInputSubmit,
+    AIInputTextarea,
+    AIInputToolbar
 } from '@/components/ui/kibo-ui/ai/input';
 import * as React from 'react';
 import { memo } from 'react';
@@ -14,9 +14,10 @@ interface Props {
   setInput: (input: string) => void;
   status?: 'submitted' | 'streaming' | 'ready' | 'error';
   stop: () => void;
+  onFocus?: (event: React.FocusEvent<HTMLTextAreaElement>) => void;
 }
 
-const Input = memo(({ onSubmit, setInput, inputValue, status: externalStatus, stop }: Props) => {
+const Input = memo(({ onSubmit, setInput, inputValue, status: externalStatus, stop, onFocus }: Props) => {
   const status = externalStatus
 
   const textareaRef = React.useRef<HTMLTextAreaElement>(null);
@@ -62,6 +63,7 @@ const Input = memo(({ onSubmit, setInput, inputValue, status: externalStatus, st
         placeholder="Escreva uma mensagem..."
         onChange={handleTextChange}
         onKeyDown={handleKeyDown}
+        onFocus={onFocus}
         value={inputValue}
         rows={1}
         className="resize-none"
