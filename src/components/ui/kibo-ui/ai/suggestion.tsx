@@ -41,7 +41,7 @@ export const AISuggestion = ({
   ...props
 }: AISuggestionProps) => {
   const handleClick = () => {
-    onClick?.(suggestion.title + ' ' + suggestion.label);
+    onClick?.(`${suggestion.title} ${suggestion.label}`);
   };
 
   return (

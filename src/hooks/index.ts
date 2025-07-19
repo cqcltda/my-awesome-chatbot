@@ -3,6 +3,7 @@ export * from './use-auto-resume';
 
 export * from './use-chat-step';
 export * from './use-conditional-scroll';
+export * from './use-health-assistant';
 export * from './use-media-query';
 export * from './use-mobile';
 export * from './use-scroll-to-bottom';

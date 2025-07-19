@@ -1,0 +1,28 @@
+{
+  "assistantId": "asst_UMg6YSlOY2Vw2Yu7eBIRDb3E",
+  "name": "Assistente de Saúde e Bem-Estar",
+  "model": "gpt-4o",
+  "fileIds": [
+    "file-UJBMoWGbm7sdDtCJQnFKgb",
+    "file-Wm7vYMMAj3Vgx1dx4qPDQk",
+    "file-RHwqF8sFFPRFZezsNv11rZ"
+  ],
+  "createdAt": "2025-07-19T23:25:44.248Z",
+  "files": [
+    {
+      "path": "./public/documents/base-1.pdf",
+      "name": "base-1.pdf",
+      "size": 7453749
+    },
+    {
+      "path": "./public/documents/base-2.pdf",
+      "name": "base-2.pdf",
+      "size": 213051
+    },
+    {
+      "path": "./public/documents/base-3.pdf",
+      "name": "base-3.pdf",
+      "size": 471358
+    }
+  ]
+}

@@ -1,7 +1,7 @@
 'use client';
 
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-import { UseChatHelpers } from '@ai-sdk/react';
+import type { UseChatHelpers } from '@ai-sdk/react';
 import cx from 'classnames';
 import { motion } from 'framer-motion';
 import { StopIcon } from './icons';
