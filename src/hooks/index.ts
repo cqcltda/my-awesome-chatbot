@@ -8,4 +8,5 @@ export * from './use-mobile';
 export * from './use-scroll-to-bottom';
 export * from './use-scroll-to-bottom-simple';
 export * from './use-user-info';
+export * from './use-virtual-keyboard';
 

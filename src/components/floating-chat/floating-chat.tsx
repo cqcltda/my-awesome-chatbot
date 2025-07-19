@@ -3,26 +3,26 @@
 import { ArrowDown, MessageSquare, X } from "lucide-react"
 import * as React from "react"
 
-import { useAutoResume, useChatStep, useConditionalScroll, useMediaQuery, useUserInfo } from "@/hooks"
+import { useAutoResume, useChatStep, useConditionalScroll, useMediaQuery, useUserInfo, useVirtualKeyboard } from "@/hooks"
 
 import { Button } from "@/components/ui/button"
 import {
-    Card,
-    CardContent,
-    CardFooter,
-    CardHeader
+  Card,
+  CardContent,
+  CardFooter,
+  CardHeader
 } from "@/components/ui/card"
 import {
-    Drawer,
-    DrawerContent,
-    DrawerHeader,
-    DrawerTitle,
-    DrawerTrigger
+  Drawer,
+  DrawerContent,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerTrigger
 } from "@/components/ui/drawer"
 import {
-    Popover,
-    PopoverContent,
-    PopoverTrigger,
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
 } from "@/components/ui/popover"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { ChatSDKError } from '@/lib/errors'
@@ -49,6 +49,7 @@ const FloatingChat = ({ id,
   autoResume, }: Props) => {
   const [open, setOpen] = React.useState(false)
   const isDesktop = useMediaQuery("(min-width: 768px)")
+  const { isKeyboardOpen } = useVirtualKeyboard()
   
   // Hook para gerenciar informações do usuário
   const { userInfo, saveUserInfo } = useUserInfo();
@@ -129,6 +130,17 @@ const FloatingChat = ({ id,
     }
   }, [messages, status, scrollToBottom, showScrollButton]);
 
+  // Scroll automático quando o teclado virtual aparecer
+  useEffect(() => {
+    if (isKeyboardOpen && !isDesktop) {
+      // Pequeno delay para garantir que o layout foi ajustado
+      const timer = setTimeout(() => {
+        scrollToBottom();
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [isKeyboardOpen, isDesktop, scrollToBottom]);
+
   useAutoResume({
     autoResume,
     initialMessages,
@@ -167,22 +179,32 @@ const FloatingChat = ({ id,
   }, [isDesktop, handleSubmit]);
 
   const renderChatContent = () => (
-    <Card className="w-full border-0 md:border grid grid-rows-[auto_1fr_auto] max-h-[90vh]">
-      <CardHeader className="shrink-0">
+    <Card className={`${isDesktop ? 'h-full max-h-full' : 'size-full'} border-0 md:border grid grid-rows-[auto_1fr_auto] overflow-hidden ${
+      !isDesktop && isKeyboardOpen ? 'keyboard-open' : ''
+    }`}>
+      <CardHeader className={`shrink-0 px-6 py-4 ${!isDesktop && isKeyboardOpen ? 'hidden' : ''}`}>
         <div className="w-full flex justify-between items-center">
-        <h1 className="text-2xl font-bold">IA Médica</h1>
-        <Button variant="outline" size="icon" onClick={handleCloseChat}>
-          <X className="size-6" />
-        </Button>
+          <div className="flex items-center gap-3">
+            <div className="size-2 bg-green-500 rounded-full animate-pulse" />
+            <h1 className="text-xl font-semibold">IA Médica</h1>
+          </div>
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            onClick={handleCloseChat}
+            className="hover:bg-muted/50 rounded-full"
+          >
+            <X className="size-5" />
+          </Button>
         </div>
       </CardHeader>
-      <CardContent className="min-h-0 overflow-hidden p-0">
+      <CardContent className="min-h-0 overflow-hidden p-0 flex flex-col">
         <ScrollArea 
-          className="size-full"
+          className={`flex-1 ${isDesktop ? 'max-h-[calc(70vh-140px)]' : ''}`}
           ref={scrollRef}
           onScroll={handleScroll}
         >
-          <div className="p-4">
+          <div className={`px-6 py-4 ${!isDesktop && isKeyboardOpen ? 'pt-3' : ''}`}>
             <ConversationWithResponse
               messages={messages}
               status={status}
@@ -191,8 +213,8 @@ const FloatingChat = ({ id,
           </div>
         </ScrollArea>
       </CardContent>
-      <CardFooter className="shrink-0 relative">
-        <form onSubmit={submitForm} className="flex bg-background pb-4 sm:pb-6 gap-2 w-full sm:max-w-3xl">
+      <CardFooter className="shrink-0 relative px-6 py-4">
+        <form onSubmit={submitForm} className="flex bg-background gap-2 w-full sm:max-w-3xl">
           <div className="relative w-full flex flex-col gap-4">
             <AnimatePresence>
               {showScrollButton && (
@@ -219,7 +241,7 @@ const FloatingChat = ({ id,
               )}
             </AnimatePresence>
 
-            {messages.length === 0 && (
+            {messages.length === 0 && !isKeyboardOpen && (
               <Suggestions suggestions={[
                 {title:'Estou com dor de cabeça', label:'pode me ajudar?'},
                 {title:'Faz dois dias que tenho dores no peito', label:'o que devo fazer?'},
@@ -248,7 +270,7 @@ const FloatingChat = ({ id,
           <Button
             variant="default"
             size="icon"
-            className="fixed bottom-4 right-4 size-14 rounded-full shadow-lg"
+            className="fixed bottom-4 right-4 size-14 rounded-full shadow-lg z-50"
           >
             {open ? <X className="size-6" /> : <MessageSquare className="size-6" />}
             <span className="sr-only">Abrir chat</span>
@@ -258,6 +280,11 @@ const FloatingChat = ({ id,
           sideOffset={16}
           align="end"
           className="w-80 md:w-96 p-0"
+          style={{ 
+            maxHeight: '70vh',
+            height: '70vh',
+            overflow: 'hidden'
+          }}
         >
           {renderChatContent()}
         </PopoverContent>
@@ -271,13 +298,13 @@ const FloatingChat = ({ id,
         <Button
           variant="default"
           size="icon"
-          className="fixed bottom-4 right-4 size-14 rounded-full shadow-lg"
+          className="fixed bottom-4 right-4 size-14 rounded-full shadow-lg z-50"
         >
           {open ? <X className="size-6" /> : <MessageSquare className="size-6" />}
           <span className="sr-only">Abrir chat</span>
         </Button>
       </DrawerTrigger>
-      <DrawerContent className="h-[90%]">
+      <DrawerContent className="h-full">
         <DrawerHeader className="sr-only">
           <DrawerTitle>IA Médica</DrawerTitle>
         </DrawerHeader>

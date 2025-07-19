@@ -57,7 +57,7 @@ const Input = memo(({ onSubmit, setInput, inputValue, status: externalStatus, st
   };
 
   return (
-    <div className="w-full divide-y overflow-hidden rounded-xl border bg-background shadow-sm">
+    <div className="w-full overflow-hidden rounded-2xl border-2 border-muted bg-background shadow-sm hover:shadow-md transition-shadow duration-200">
       <AIInputTextarea
         ref={textareaRef}
         placeholder="Escreva uma mensagem..."
@@ -66,13 +66,14 @@ const Input = memo(({ onSubmit, setInput, inputValue, status: externalStatus, st
         onFocus={onFocus}
         value={inputValue}
         rows={1}
-        className="resize-none"
+        className="resize-none min-h-[56px]"
       />
-      <AIInputToolbar className="flex justify-end">
+      <AIInputToolbar className="flex justify-end px-2 pb-2">
         <AIInputSubmit
           disabled={!inputValue}
           status={status}
           onClick={handleButtonClick}
+          className="rounded-full hover:scale-105 transition-transform duration-200"
         />
       </AIInputToolbar>
     </div>

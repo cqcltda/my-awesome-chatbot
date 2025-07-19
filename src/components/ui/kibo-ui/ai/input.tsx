@@ -1,22 +1,22 @@
 'use client';
 
-import { Loader2Icon, SendIcon, SquareIcon, XIcon } from 'lucide-react';
-import type {
-  ComponentProps,
-  HTMLAttributes,
-  KeyboardEventHandler,
-} from 'react';
-import { Children, useCallback, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
+import { Loader2Icon, SendIcon, SquareIcon, XIcon } from 'lucide-react';
+import type {
+    ComponentProps,
+    HTMLAttributes,
+    KeyboardEventHandler,
+} from 'react';
+import { Children, useCallback, useEffect, useRef } from 'react';
 
 type UseAutoResizeTextareaProps = {
   minHeight: number;
@@ -116,9 +116,11 @@ export const AIInputTextarea = ({
   return (
     <Textarea
       className={cn(
-        'w-full resize-none rounded-none border-none p-3 shadow-none outline-none ring-0',
+        'w-full resize-none rounded-none border-none p-4 shadow-none outline-none ring-0',
         'bg-transparent dark:bg-transparent',
-        'focus-visible:ring-0',
+        'focus-visible:ring-0 focus-visible:bg-transparent',
+        'placeholder:text-muted-foreground/60',
+        'text-sm leading-relaxed',
         className
       )}
       name="message"
@@ -210,7 +212,11 @@ export const AIInputSubmit = ({
 
   return (
     <Button
-      className={cn('gap-1.5 rounded-lg rounded-br-xl', className)}
+      className={cn(
+        'gap-1.5 rounded-full shadow-sm hover:shadow-md transition-all duration-200',
+        'hover:scale-105 active:scale-95',
+        className
+      )}
       size={size}
       type="submit"
       variant={variant}

@@ -23,7 +23,7 @@ const ConversationWithResponse = memo(({ messages, status, chatId }: Conversatio
         <motion.div
           initial={{ y: 5, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
-          className="w-full mx-auto max-w-3xl px-4 group/message"
+          className="w-full group/message"
         >
           <AIMessage from="assistant">
             <AIResponse>Olá! Sou sua assistente médica virtual do consultório do Dr. Bernardo. Como posso ajudá-lo hoje?</AIResponse>
@@ -44,7 +44,7 @@ const ConversationWithResponse = memo(({ messages, status, chatId }: Conversatio
                 initial={{ y: 5, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 data-role={message.role}
-                className="w-full mx-auto max-w-3xl px-4 group/message"
+                className="w-full group/message chat-message-user"
               >
                 <AIMessage from="user">
                   <AIMessageContent>{message.content}</AIMessageContent>
@@ -71,7 +71,7 @@ const ConversationWithResponse = memo(({ messages, status, chatId }: Conversatio
                 initial={{ y: 5, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 data-role={message.role}
-                className="w-full mx-auto max-w-3xl px-4 group/message"
+                className="w-full group/message chat-message-assistant"
               >
                 <AIMessage from="assistant">
                   <div className="flex flex-col gap-4">
@@ -98,7 +98,7 @@ const ConversationWithResponse = memo(({ messages, status, chatId }: Conversatio
             initial={{ y: 5, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="w-full mx-auto max-w-3xl px-4 group/message"
+            className="w-full group/message"
           >
             <div className="flex items-center gap-2 text-muted-foreground">
               <Loader2 className="animate-spin" size={18} />

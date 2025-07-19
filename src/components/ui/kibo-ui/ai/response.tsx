@@ -1,21 +1,21 @@
 'use client';
 
 import {
-  type BundledLanguage,
-  CodeBlock,
-  CodeBlockBody,
-  CodeBlockContent,
-  CodeBlockCopyButton,
-  CodeBlockFilename,
-  CodeBlockFiles,
-  CodeBlockHeader,
-  CodeBlockItem,
-  type CodeBlockProps,
-  CodeBlockSelect,
-  CodeBlockSelectContent,
-  CodeBlockSelectItem,
-  CodeBlockSelectTrigger,
-  CodeBlockSelectValue,
+    CodeBlock,
+    CodeBlockBody,
+    CodeBlockContent,
+    CodeBlockCopyButton,
+    CodeBlockFilename,
+    CodeBlockFiles,
+    CodeBlockHeader,
+    CodeBlockItem,
+    CodeBlockSelect,
+    CodeBlockSelectContent,
+    CodeBlockSelectItem,
+    CodeBlockSelectTrigger,
+    CodeBlockSelectValue,
+    type BundledLanguage,
+    type CodeBlockProps,
 } from '@/components/ui/kibo-ui/code-block';
 import { cn } from '@/lib/utils';
 import type { HTMLAttributes } from 'react';
@@ -172,7 +172,7 @@ export const AIResponse = memo(
   ({ className, options, children, ...props }: AIResponseProps) => (
     <div
       className={cn(
-        'size-full [&>*:first-child]:mt-0 [&>*:last-child]:mb-0',
+        'size-full [&>*:first-child]:mt-0 [&>*:last-child]:mb-0 break-words',
         className
       )}
       {...props}
