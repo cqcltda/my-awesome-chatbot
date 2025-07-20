@@ -42,6 +42,21 @@ export interface ConversationThread {
   messages: ThreadMessage[];
 }
 
+// Interface para informações do usuário (compatível com o chat principal)
+export interface UserInfo {
+  name?: string;
+  age?: number;
+  gender?: string;
+  weight?: number;
+  height?: number;
+  profession?: string;
+  location?: string;
+  contact?: string;
+  mainComplaint?: string;
+  duration?: string;
+  intensity?: number;
+}
+
 /**
  * Upload de arquivos para a OpenAI
  */
@@ -66,7 +81,7 @@ export async function uploadFiles(filePaths: string[]): Promise<string[]> {
 }
 
 /**
- * Criar um assistente de saúde usando a API de Assistentes real
+ * Criar um assistente de saúde unificado usando a API de Assistentes real
  */
 export async function createHealthAssistant(
   config: AssistantConfig
@@ -115,12 +130,15 @@ export async function addMessageToThread(
 }
 
 /**
- * Executar o assistente em uma thread usando a API real
+ * Executar o assistente unificado em uma thread
+ * Este assistente combina triagem médica + base de conhecimento especializada
  */
-export async function runAssistant(
+export async function runUnifiedAssistant(
   assistantId: string,
   threadId: string,
-  userMessage: string
+  userMessage: string,
+  userInfo?: UserInfo,
+  chatStep: string = 'GATHERING_INFO'
 ): Promise<string> {
   try {
     // Adiciona a mensagem do usuário à thread
@@ -197,6 +215,17 @@ export async function runAssistant(
     console.error('Erro ao executar assistente:', error);
     throw error;
   }
+}
+
+/**
+ * Executar o assistente em uma thread usando a API real (mantido para compatibilidade)
+ */
+export async function runAssistant(
+  assistantId: string,
+  threadId: string,
+  userMessage: string
+): Promise<string> {
+  return runUnifiedAssistant(assistantId, threadId, userMessage);
 }
 
 /**

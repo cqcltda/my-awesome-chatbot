@@ -12,14 +12,32 @@ interface HealthAssistantResponse {
   threadId: string;
 }
 
+interface UserInfo {
+  name?: string;
+  age?: number;
+  gender?: string;
+  weight?: number;
+  height?: number;
+  profession?: string;
+  location?: string;
+  contact?: string;
+  mainComplaint?: string;
+  duration?: string;
+  intensity?: number;
+}
+
 interface UseHealthAssistantReturn {
   messages: HealthAssistantMessage[];
   isLoading: boolean;
   error: string | null;
   threadId: string | null;
+  userInfo: UserInfo;
+  chatStep: string;
   sendMessage: (message: string) => Promise<void>;
   clearMessages: () => void;
   loadThreadHistory: (threadId: string) => Promise<void>;
+  updateUserInfo: (info: Partial<UserInfo>) => void;
+  updateChatStep: (step: string) => void;
 }
 
 export function useHealthAssistant(): UseHealthAssistantReturn {
@@ -27,6 +45,16 @@ export function useHealthAssistant(): UseHealthAssistantReturn {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [threadId, setThreadId] = useState<string | null>(null);
+  const [userInfo, setUserInfo] = useState<UserInfo>({});
+  const [chatStep, setChatStep] = useState<string>('GATHERING_INFO');
+
+  const updateUserInfo = useCallback((info: Partial<UserInfo>) => {
+    setUserInfo(prev => ({ ...prev, ...info }));
+  }, []);
+
+  const updateChatStep = useCallback((step: string) => {
+    setChatStep(step);
+  }, []);
 
   const sendMessage = useCallback(async (message: string) => {
     if (!message.trim()) return;
@@ -44,15 +72,21 @@ export function useHealthAssistant(): UseHealthAssistantReturn {
     setMessages(prev => [...prev, userMessage]);
 
     try {
+      // Preparar dados para envio
+      const requestData = {
+        message,
+        threadId,
+        chatStep,
+        // Só enviar userInfo se tiver dados
+        ...(Object.keys(userInfo).length > 0 ? { userInfo } : {})
+      };
+
       const response = await fetch('/api/assistant', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          message,
-          threadId,
-        }),
+        body: JSON.stringify(requestData),
       });
 
       const data: HealthAssistantResponse = await response.json();
@@ -81,12 +115,14 @@ export function useHealthAssistant(): UseHealthAssistantReturn {
     } finally {
       setIsLoading(false);
     }
-  }, [threadId]);
+  }, [threadId, userInfo, chatStep]);
 
   const clearMessages = useCallback(() => {
     setMessages([]);
     setThreadId(null);
     setError(null);
+    setUserInfo({});
+    setChatStep('GATHERING_INFO');
   }, []);
 
   const loadThreadHistory = useCallback(async (threadId: string) => {
@@ -127,8 +163,12 @@ export function useHealthAssistant(): UseHealthAssistantReturn {
     isLoading,
     error,
     threadId,
+    userInfo,
+    chatStep,
     sendMessage,
     clearMessages,
     loadThreadHistory,
+    updateUserInfo,
+    updateChatStep,
   };
 } 
