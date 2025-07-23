@@ -75,11 +75,13 @@ export function useHealthAssistant(): UseHealthAssistantReturn {
       // Preparar dados para envio
       const requestData = {
         message,
-        threadId,
+        threadId: threadId || undefined, // Garantir que null seja convertido para undefined
         chatStep,
         // Só enviar userInfo se tiver dados
         ...(Object.keys(userInfo).length > 0 ? { userInfo } : {})
       };
+
+      console.log('Enviando request para /api/assistant:', requestData);
 
       const response = await fetch('/api/assistant', {
         method: 'POST',

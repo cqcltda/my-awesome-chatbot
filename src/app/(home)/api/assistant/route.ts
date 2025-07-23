@@ -1,10 +1,10 @@
-import { createThread, getThreadMessages, runUnifiedAssistant } from '@/lib/ai/assistants';
+import { createThread, getThreadMessages, runAssistantSimple } from '@/lib/ai/assistants-simple';
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 
 const requestSchema = z.object({
   message: z.string().min(1),
-  threadId: z.string().optional(),
+  threadId: z.string().nullable().optional(),
   userInfo: z.object({
     name: z.string().optional(),
     age: z.number().optional(),
@@ -27,6 +27,8 @@ export async function POST(request: NextRequest) {
     console.log('Request body:', body); // Debug log
     
     const { message, threadId, userInfo, chatStep } = requestSchema.parse(body);
+    
+    console.log('Parsed data:', { message, threadId, chatStep, userInfoKeys: userInfo ? Object.keys(userInfo) : 'none' });
 
     const assistantId = process.env.HEALTH_ASSISTANT_ID;
     if (!assistantId) {
@@ -41,10 +43,18 @@ export async function POST(request: NextRequest) {
     // Se não há thread, criar uma nova
     if (!currentThreadId) {
       currentThreadId = await createThread();
+      console.log('Nova thread criada:', currentThreadId);
+    } else {
+      console.log('Usando thread existente:', currentThreadId);
     }
 
-    // Executar o assistente unificado
-    const response = await runUnifiedAssistant(
+    // Validar se temos um threadId válido
+    if (!currentThreadId) {
+      throw new Error('Failed to create or retrieve thread ID');
+    }
+
+    // Executar o assistente simplificado
+    const response = await runAssistantSimple(
       assistantId,
       currentThreadId,
       message,

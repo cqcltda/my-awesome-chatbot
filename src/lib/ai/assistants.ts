@@ -57,6 +57,11 @@ export interface UserInfo {
   intensity?: number;
 }
 
+// Configurações para polling e timeout
+const POLLING_INTERVAL = 1000; // 1 segundo
+const MAX_POLLING_TIME = 60000; // 60 segundos
+const MAX_RETRIES = 3;
+
 /**
  * Upload de arquivos para a OpenAI
  */
@@ -110,9 +115,19 @@ export async function createHealthAssistant(
  * Criar uma nova thread de conversa
  */
 export async function createThread(): Promise<string> {
-  const thread = await openai.beta.threads.create();
-  console.log(`Thread criada com ID: ${thread.id}`);
-  return thread.id;
+  try {
+    const thread = await openai.beta.threads.create();
+    console.log(`Thread criada com ID: ${thread.id}`);
+    
+    if (!thread.id) {
+      throw new Error('Thread created but no ID returned');
+    }
+    
+    return thread.id;
+  } catch (error) {
+    console.error('Erro ao criar thread:', error);
+    throw new Error(`Failed to create thread: ${error}`);
+  }
 }
 
 /**
@@ -123,98 +138,174 @@ export async function addMessageToThread(
   message: string,
   role: 'user' | 'assistant' = 'user'
 ): Promise<void> {
-  await openai.beta.threads.messages.create(threadId, {
-    role,
-    content: message,
-  });
+  try {
+    if (!threadId) {
+      throw new Error('ThreadId is required for adding message');
+    }
+    
+    console.log(`Adicionando mensagem à thread ${threadId}:`, { role, message: message.substring(0, 50) + '...' });
+    
+    await openai.beta.threads.messages.create(threadId, {
+      role,
+      content: message,
+    });
+    
+    console.log('Mensagem adicionada com sucesso');
+  } catch (error) {
+    console.error('Erro ao adicionar mensagem à thread:', error);
+    throw new Error(`Failed to add message to thread: ${error}`);
+  }
+}
+
+/**
+ * Aguardar com timeout
+ */
+function wait(ms: number): Promise<void> {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+/**
+ * Verificar se o run foi concluído ou precisa de ação
+ */
+async function checkRunStatus(threadId: string, runId: string): Promise<any> {
+  try {
+    // Validar se os parâmetros são válidos
+    if (!threadId || !runId) {
+      throw new Error(`Invalid parameters: threadId=${threadId}, runId=${runId}`);
+    }
+    
+    console.log(`Verificando status do run: threadId=${threadId}, runId=${runId}`);
+    
+    // @ts-ignore - OpenAI API pode ter mudado os tipos
+    const run = await openai.beta.threads.runs.retrieve(threadId, runId);
+    return run;
+  } catch (error) {
+    console.error('Erro ao verificar status do run:', error);
+    throw new Error(`Failed to retrieve run status: ${error}`);
+  }
+}
+
+/**
+ * Polling do status do run seguindo as melhores práticas da OpenAI
+ */
+async function pollRunStatus(threadId: string, runId: string): Promise<any> {
+  const startTime = Date.now();
+  
+  console.log(`Iniciando polling para threadId=${threadId}, runId=${runId}`);
+  
+  let run = await checkRunStatus(threadId, runId);
+  
+  console.log(`Run ${runId} iniciado com status: ${run.status}`);
+
+  while (run.status === 'in_progress' || run.status === 'queued') {
+    // Verificar timeout
+    if (Date.now() - startTime > MAX_POLLING_TIME) {
+      throw new Error(`Run timeout after ${MAX_POLLING_TIME}ms`);
+    }
+
+    // Aguardar antes do próximo poll
+    await wait(POLLING_INTERVAL);
+    
+    // Verificar status novamente
+    run = await checkRunStatus(threadId, runId);
+    console.log(`Status do run ${runId}: ${run.status}`);
+  }
+
+  return run;
 }
 
 /**
  * Executar o assistente unificado em uma thread
- * Este assistente combina triagem médica + base de conhecimento especializada
+ * Implementação seguindo as melhores práticas da OpenAI
  */
 export async function runUnifiedAssistant(
   assistantId: string,
-  threadId: string,
+  threadId: string | undefined,
   userMessage: string,
   userInfo?: UserInfo,
   chatStep: string = 'GATHERING_INFO'
 ): Promise<string> {
-  try {
-    // Adiciona a mensagem do usuário à thread
-    await addMessageToThread(threadId, userMessage, 'user');
-
-    // Executa o assistente
-    let run = await openai.beta.threads.runs.create(threadId, {
-      assistant_id: assistantId,
-    });
-
-    console.log(`Run iniciado com ID: ${run.id}, status: ${run.status}`);
-
-    // Aguarda o 'run' ser concluído
-    while (run.status === 'in_progress' || run.status === 'queued') {
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Busca o status atual do run usando uma abordagem mais simples
-      try {
-        // @ts-ignore - Ignorando erro de tipo temporariamente
-        const runStatus = await openai.beta.threads.runs.retrieve(threadId, run.id);
-        run = runStatus;
-      } catch (error) {
-        console.error('Erro ao buscar status do run:', error);
-        throw new Error('Failed to retrieve run status');
-      }
-      
-      console.log(`Status do run ${run.id}: ${run.status}`);
-      
-      // Verifica se houve erro
-      if (run.status === 'failed') {
-        const errorMessage = run.last_error?.message || 'Unknown error';
-        console.error(`Run failed: ${errorMessage}`);
-        throw new Error(`Run failed: ${errorMessage}`);
-      }
-      
-      // Verifica se foi cancelado
-      if (run.status === 'cancelled') {
-        throw new Error('Run was cancelled');
-      }
-
-      // Verifica se requer ação (function calling)
-      if (run.status === 'requires_action') {
-        console.log('Run requires action, handling...');
-        // Para simplificar, vamos cancelar se precisar de ação
-        try {
-          // @ts-ignore - Ignorando erro de tipo temporariamente
-          await openai.beta.threads.runs.cancel(threadId, run.id);
-        } catch (error) {
-          console.error('Erro ao cancelar run:', error);
-        }
-        throw new Error('Run requires action which is not implemented yet');
-      }
-    }
-
-    if (run.status === 'completed') {
-      const messages = await openai.beta.threads.messages.list(threadId);
-      
-      // A resposta do assistente estará no primeiro item da lista de mensagens
-      if (messages.data.length > 0) {
-        const assistantResponse = messages.data[0].content[0];
-        
-        if (assistantResponse.type === 'text') {
-          return assistantResponse.text.value;
-        } else {
-          throw new Error('Unexpected response type from assistant');
-        }
-      } else {
-        throw new Error('No messages found in thread');
-      }
-    } else {
-      throw new Error(`Unexpected run status: ${run.status}`);
-    }
-  } catch (error) {
-    console.error('Erro ao executar assistente:', error);
-    throw error;
+  let retryCount = 0;
+  
+  // Validar se temos um threadId válido
+  if (!threadId) {
+    throw new Error('ThreadId is required but was not provided');
   }
+  
+  while (retryCount < MAX_RETRIES) {
+    try {
+      // Adiciona a mensagem do usuário à thread
+      await addMessageToThread(threadId, userMessage, 'user');
+
+      // Executa o assistente
+      const run = await openai.beta.threads.runs.create(threadId, {
+        assistant_id: assistantId,
+      });
+
+      console.log(`Run iniciado com ID: ${run.id} na thread ${threadId}`);
+
+      // Polling do status seguindo as melhores práticas
+      const finalRun = await pollRunStatus(threadId, run.id);
+
+      // Verificar status final
+      switch (finalRun.status) {
+        case 'completed':
+          // Buscar mensagens da thread
+          const messages = await openai.beta.threads.messages.list(threadId);
+          
+          if (messages.data.length === 0) {
+            throw new Error('No messages found in thread');
+          }
+
+          // A resposta do assistente estará no primeiro item da lista
+          const assistantResponse = messages.data[0].content[0];
+          
+          if (assistantResponse.type === 'text') {
+            return assistantResponse.text.value;
+          } else {
+            throw new Error(`Unexpected response type: ${assistantResponse.type}`);
+          }
+
+        case 'requires_action':
+          console.log('Run requires action - implementar function calling se necessário');
+          // Para este projeto, vamos cancelar o run se precisar de ação
+          // Em uma implementação completa, você implementaria o handling de function calls aqui
+          // @ts-ignore - OpenAI API pode ter mudado os tipos
+          await openai.beta.threads.runs.cancel(threadId, run.id);
+          throw new Error('Run requires action which is not implemented for this use case');
+
+        case 'failed':
+          const errorMessage = finalRun.last_error?.message || 'Unknown error';
+          console.error(`Run failed: ${errorMessage}`);
+          throw new Error(`Run failed: ${errorMessage}`);
+
+        case 'cancelled':
+          throw new Error('Run was cancelled');
+
+        case 'expired':
+          throw new Error('Run expired - timeout exceeded');
+
+        default:
+          throw new Error(`Unexpected run status: ${finalRun.status}`);
+      }
+
+    } catch (error) {
+      retryCount++;
+      console.error(`Tentativa ${retryCount} falhou:`, error);
+
+      if (retryCount >= MAX_RETRIES) {
+        console.error('Máximo de tentativas atingido');
+        throw error;
+      }
+
+      // Aguardar antes da próxima tentativa (backoff exponencial)
+      const backoffTime = Math.pow(2, retryCount) * 1000;
+      console.log(`Aguardando ${backoffTime}ms antes da próxima tentativa...`);
+      await wait(backoffTime);
+    }
+  }
+
+  throw new Error('Máximo de tentativas atingido');
 }
 
 /**
