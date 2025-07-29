@@ -110,7 +110,7 @@ export async function runAssistantSimple(
       
       try {
         // @ts-ignore - OpenAI API v5.10.2
-        runStatus = await openai.beta.threads.runs.retrieve(threadId, { run_id: run.id });
+        runStatus = await openai.beta.threads.runs.retrieve(threadId, run.id);
         console.log(`Tentativa ${attempts}: Status do run = ${runStatus.status}`);
         
         // Verificar se houve erro

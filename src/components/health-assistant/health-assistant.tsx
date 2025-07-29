@@ -31,6 +31,7 @@ export function HealthAssistant({ className }: HealthAssistantProps) {
     error,
     threadId,
     sendMessage,
+    sendMessageWithStreaming,
     clearMessages,
   } = useHealthAssistant();
 
@@ -57,7 +58,8 @@ export function HealthAssistant({ className }: HealthAssistantProps) {
 
     const message = inputMessage.trim();
     setInputMessage('');
-    await sendMessage(message);
+    // Usar streaming para melhor experiência do usuário
+    await sendMessageWithStreaming(message);
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {

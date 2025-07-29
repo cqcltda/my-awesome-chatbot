@@ -184,9 +184,9 @@ const FloatingChat = ({ id,
     }
   }, [isDesktop, handleSubmit]);
 
-  // Função para enviar mensagem para o assistente unificado
+  // Função para enviar mensagem para o assistente unificado com streaming
   const handleUnifiedSubmit = async (message: string) => {
-    await healthAssistant.sendMessage(message);
+    await healthAssistant.sendMessageWithStreaming(message);
   };
 
   const renderChatContent = () => (
@@ -200,17 +200,31 @@ const FloatingChat = ({ id,
             <h1 className="text-xl font-semibold">Assistente Médico</h1>
             <Badge variant="secondary" className="ml-2">
               <Stethoscope className="size-3 mr-1" />
-              Inteligente
+              {healthAssistant.threadId ? 'Sessão Ativa' : 'Inteligente'}
             </Badge>
           </div>
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            onClick={handleCloseChat}
-            className="hover:bg-muted/50 rounded-full"
-          >
-            <X className="size-5" />
-          </Button>
+          <div className="flex items-center gap-2">
+            {healthAssistant.messages.length > 0 && (
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                onClick={healthAssistant.clearMessages}
+                disabled={healthAssistant.isLoading}
+                className="hover:bg-muted/50 rounded-full"
+                title="Limpar conversa"
+              >
+                <div className="size-4 rounded-full border-2 border-current" />
+              </Button>
+            )}
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              onClick={handleCloseChat}
+              className="hover:bg-muted/50 rounded-full"
+            >
+              <X className="size-5" />
+            </Button>
+          </div>
         </div>
       </CardHeader>
       <CardContent className="min-h-0 overflow-hidden p-0 flex flex-col">
@@ -276,18 +290,9 @@ const FloatingChat = ({ id,
                 ))}
                 
                 {healthAssistant.isLoading && (
-                  <div className="flex items-start gap-3">
-                    <div className="shrink-0 mt-1">
-                      <Stethoscope className="size-4 text-green-600" />
-                    </div>
-                    <div className="flex-1 p-3 rounded-lg border bg-green-50 border-green-200">
-                      <div className="flex items-center gap-2">
-                        <div className="size-4 animate-spin rounded-full border-2 border-green-600 border-t-transparent" />
-                        <span className="text-sm text-gray-600">
-                          Analisando sua pergunta...
-                        </span>
-                      </div>
-                    </div>
+                  <div className="flex items-center gap-2 text-muted-foreground">
+                    <div className="size-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                    <span className="text-sm">Pensando...</span>
                   </div>
                 )}
               </div>
@@ -295,8 +300,20 @@ const FloatingChat = ({ id,
           </div>
         </ScrollArea>
         
+        {/* Área de erro */}
+        {healthAssistant.error && (
+          <div className="px-6 py-3 bg-red-50 border-t border-red-200">
+            <div className="flex items-start gap-2">
+              <div className="size-4 text-red-600 mt-0.5 shrink-0">⚠️</div>
+              <div className="text-red-800 text-sm">
+                {healthAssistant.error}
+              </div>
+            </div>
+          </div>
+        )}
+        
         {/* Sugestões movidas para fora do ScrollArea */}
-        {healthAssistant.messages.length === 0 && !isKeyboardOpen && (
+        {healthAssistant.messages.length === 0 && !isKeyboardOpen && !healthAssistant.error && (
           <div className="px-6 pb-4">
             <Suggestions suggestions={[
               {title:'Estou com dor de cabeça', label:'pode me ajudar?'},
@@ -345,21 +362,19 @@ const FloatingChat = ({ id,
             <div className="w-full overflow-hidden rounded-2xl border-2 border-muted bg-background shadow-sm hover:shadow-md transition-shadow duration-200">
               <textarea
                 placeholder="Digite sua pergunta médica..."
-                onChange={(e) => {
-                  // Gerenciar input localmente
-                }}
+                disabled={healthAssistant.isLoading}
                 onKeyDown={(e) => {
                   if (e.key === 'Enter' && !e.shiftKey) {
                     e.preventDefault();
                     const value = e.currentTarget.value.trim();
-                    if (value) {
+                    if (value && !healthAssistant.isLoading) {
                       handleUnifiedSubmit(value);
                       e.currentTarget.value = '';
                     }
                   }
                 }}
                 onFocus={handleInputFocus}
-                className="w-full resize-none min-h-[56px] p-3 border-0 bg-transparent focus:outline-none"
+                className="w-full resize-none min-h-[56px] p-3 border-0 bg-transparent focus:outline-none disabled:opacity-50"
                 rows={1}
               />
               <div className="flex justify-end px-2 pb-2">
@@ -367,7 +382,7 @@ const FloatingChat = ({ id,
                   disabled={healthAssistant.isLoading}
                   onClick={() => {
                     const textarea = document.querySelector('textarea[placeholder="Digite sua pergunta médica..."]') as HTMLTextAreaElement;
-                    if (textarea && textarea.value.trim()) {
+                    if (textarea && textarea.value.trim() && !healthAssistant.isLoading) {
                       handleUnifiedSubmit(textarea.value.trim());
                       textarea.value = '';
                     }
@@ -375,7 +390,11 @@ const FloatingChat = ({ id,
                   className="rounded-full hover:scale-105 transition-transform duration-200"
                   size="icon"
                 >
-                  <MessageSquare className="size-4" />
+                  {healthAssistant.isLoading ? (
+                    <div className="size-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                  ) : (
+                    <MessageSquare className="size-4" />
+                  )}
                 </Button>
               </div>
             </div>

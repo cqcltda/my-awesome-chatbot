@@ -1,9 +1,9 @@
 #!/usr/bin/env tsx
 
+import { createHealthAssistant, uploadFiles } from '@/lib/ai/assistants';
 import * as dotenv from 'dotenv';
 import * as fs from 'fs';
 import * as path from 'path';
-import { createHealthAssistant, uploadFiles } from '../src/lib/ai/assistants';
 
 // Carregar variáveis de ambiente
 dotenv.config({ path: '.env.local' });

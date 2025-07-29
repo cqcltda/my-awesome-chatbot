@@ -51,12 +51,12 @@ Informações já coletadas sobre o usuário:
 `;
 };
 
-// Prompts específicos para cada etapa
+// Prompts específicos para cada etapa (VERSÃO TEMPORÁRIA - SEM FUNCTION CALLING)
 const promptEtapa1 = (userInfo: UserInfo) => `
 **ETAPA ATUAL: 1 - DADOS PESSOAIS**
 - Apresente-se e peça os dados básicos do paciente (nome, idade, sexo, etc.).
-- A cada informação que o usuário fornecer, chame a ferramenta \`updateUserInfo\` com todos os dados que você já possui, mais o novo dado.
-- Quando todos os dados pessoais forem coletados, chame \`updateChatStep\` com \`nextStep: 'MEDICAL_EVALUATION'\`.
+- Colete as informações de forma natural e conversacional.
+- Quando todos os dados pessoais forem coletados, informe ao usuário que passará para a próxima etapa.
 
 ${formatUserInfoForPrompt(userInfo)}
 `;
@@ -64,9 +64,8 @@ ${formatUserInfoForPrompt(userInfo)}
 const promptEtapa2 = (userInfo: UserInfo) => `
 **ETAPA ATUAL: 2 - DETALHES DA QUEIXA**
 - Agora, colete os 3 detalhes da queixa principal: Sintoma, Duração e Intensidade (0-10).
-- Peça UMA informação por vez.
-- A cada resposta do usuário, chame a ferramenta \`updateUserInfo\` com a nova informação.
-- Quando os 3 detalhes da queixa forem coletados, chame \`updateChatStep\` com \`nextStep: 'TRIAGE'\`.
+- Peça UMA informação por vez de forma conversacional.
+- Quando os 3 detalhes da queixa forem coletados, informe ao usuário que passará para a triagem.
 
 ${formatUserInfoForPrompt(userInfo)}
 `;
@@ -75,9 +74,7 @@ const promptEtapa3 = (userInfo: UserInfo) => `
 **ETAPA ATUAL: 3 - TRIAGEM E AÇÃO**
 - Você tem todas as informações do paciente. Analise os critérios de automedicação segura.
 - **SE FOR SEGURO:** Forneça orientações de autocuidado e encerre.
-- **SE NÃO FOR SEGURO:**
-    1. Informe ao usuário que uma consulta é necessária.
-    2. **IMEDIATAMENTE** e sem esperar resposta, chame a ferramenta \`sendToWhatsapp\` com o objeto \`userInfo\` contendo todos os dados do paciente.
+- **SE NÃO FOR SEGURO:** Informe ao usuário que uma consulta é necessária e forneça orientações sobre como proceder.
 
 ${formatUserInfoForPrompt(userInfo)}
 `;

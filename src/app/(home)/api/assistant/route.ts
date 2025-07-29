@@ -1,4 +1,4 @@
-import { createThread, getThreadMessages, runAssistantSimple } from '@/lib/ai/assistants-simple';
+import { createThread, getThreadMessages, runUnifiedAssistant, runUnifiedAssistantWithStreaming } from '@/lib/ai/assistants';
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 
@@ -19,6 +19,7 @@ const requestSchema = z.object({
     intensity: z.number().optional(),
   }).optional().nullable(),
   chatStep: z.string().optional(),
+  streaming: z.boolean().optional().default(false),
 });
 
 export async function POST(request: NextRequest) {
@@ -26,9 +27,9 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     console.log('Request body:', body); // Debug log
     
-    const { message, threadId, userInfo, chatStep } = requestSchema.parse(body);
+    const { message, threadId, userInfo, chatStep, streaming } = requestSchema.parse(body);
     
-    console.log('Parsed data:', { message, threadId, chatStep, userInfoKeys: userInfo ? Object.keys(userInfo) : 'none' });
+    console.log('Parsed data:', { message, threadId, chatStep, userInfoKeys: userInfo ? Object.keys(userInfo) : 'none', streaming });
 
     const assistantId = process.env.HEALTH_ASSISTANT_ID;
     if (!assistantId) {
@@ -53,20 +54,112 @@ export async function POST(request: NextRequest) {
       throw new Error('Failed to create or retrieve thread ID');
     }
 
-    // Executar o assistente simplificado
-    const response = await runAssistantSimple(
-      assistantId,
-      currentThreadId,
-      message,
-      userInfo || undefined,
-      chatStep
-    );
+    // Se streaming está habilitado, usar streaming
+    if (streaming) {
+      return new Response(
+        new ReadableStream({
+          async start(controller) {
+            // Flag para controlar o estado do stream
+            let isClosed = false;
 
-    return NextResponse.json({
-      success: true,
-      response,
-      threadId: currentThreadId,
-    });
+            const closeStream = () => {
+              if (!isClosed) {
+                isClosed = true;
+                controller.close();
+              }
+            };
+
+            try {
+              let fullResponse = '';
+              
+              await runUnifiedAssistantWithStreaming(
+                assistantId,
+                currentThreadId || undefined,
+                message,
+                userInfo || undefined,
+                chatStep,
+                // onTextDelta callback
+                (delta) => {
+                  if (isClosed) return; // Não faz nada se o stream já foi fechado
+                  fullResponse += delta;
+                  const chunk = `data: ${JSON.stringify({ delta, fullResponse })}\n\n`;
+                  controller.enqueue(new TextEncoder().encode(chunk));
+                },
+                // onToolCallCreated callback
+                (toolCall) => {
+                  if (isClosed) return;
+                  const chunk = `data: ${JSON.stringify({ toolCall })}\n\n`;
+                  controller.enqueue(new TextEncoder().encode(chunk));
+                },
+                // onToolCallDelta callback
+                (toolCallDelta) => {
+                  if (isClosed) return;
+                  const chunk = `data: ${JSON.stringify({ toolCallDelta })}\n\n`;
+                  controller.enqueue(new TextEncoder().encode(chunk));
+                },
+                // onError callback
+                (error) => {
+                  if (isClosed) return;
+                  const chunk = `data: ${JSON.stringify({ error: error.message })}\n\n`;
+                  controller.enqueue(new TextEncoder().encode(chunk));
+                  closeStream(); // Fecha o stream de forma segura
+                }
+              );
+
+              // Enviar dados finais somente se não houve erro
+              if (!isClosed) {
+                const finalChunk = `data: ${JSON.stringify({ 
+                  done: true, 
+                  fullResponse, 
+                  threadId: currentThreadId 
+                })}\n\n`;
+                controller.enqueue(new TextEncoder().encode(finalChunk));
+              }
+
+            } catch (error) {
+              if (!isClosed) {
+                const errorChunk = `data: ${JSON.stringify({ 
+                  error: error instanceof Error ? error.message : 'Erro desconhecido no stream' 
+                })}\n\n`;
+                controller.enqueue(new TextEncoder().encode(errorChunk));
+              }
+            } finally {
+              closeStream(); // Garante que o stream seja fechado ao final de tudo
+            }
+          }
+        }),
+        {
+          headers: {
+            'Content-Type': 'text/event-stream', // Mude para 'text/event-stream' para SSE
+            'Cache-Control': 'no-cache',
+            'Connection': 'keep-alive',
+          },
+        }
+      );
+    } else {
+      // Executar o assistente unificado sem streaming (comportamento original)
+      console.log('Executando sem streaming...');
+      try {
+        const response = await runUnifiedAssistant(
+          assistantId,
+          currentThreadId,
+          message,
+          userInfo || undefined,
+          chatStep
+        );
+
+        console.log('Resposta recebida:', response);
+
+        return NextResponse.json({
+          success: true,
+          response,
+          threadId: currentThreadId,
+        });
+      } catch (error) {
+        console.error('Erro ao executar assistente:', error);
+        throw error;
+      }
+    }
 
   } catch (error) {
     console.error('Erro na API do assistente:', error);
