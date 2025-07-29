@@ -5,6 +5,7 @@ interface HealthAssistantMessage {
   role: 'user' | 'assistant';
   content: string;
   timestamp: Date;
+  whatsAppUrl?: string | null;
 }
 
 interface HealthAssistantResponse {
@@ -172,6 +173,7 @@ export function useHealthAssistant(): UseHealthAssistantReturn {
       const decoder = new TextDecoder();
 
       let fullResponse = '';
+      let argumentChunks = ''; // Variável para acumular os fragmentos dos argumentos
 
       while (true) {
         const { done, value } = await reader.read();
@@ -206,6 +208,7 @@ export function useHealthAssistant(): UseHealthAssistantReturn {
                       role: 'assistant',
                       content: fullResponse,
                       timestamp: new Date(),
+                      whatsAppUrl: null, // Será atualizado se necessário
                     };
                     return [...newMessages, assistantMessage];
                   } else {
@@ -222,6 +225,224 @@ export function useHealthAssistant(): UseHealthAssistantReturn {
                 // Chamar callback se fornecido
                 if (onDelta) {
                   onDelta(data.delta);
+                }
+              }
+
+              // Log para debug de todos os dados recebidos
+              if (data.toolCall || data.toolCallDelta) {
+                console.log('🟢 Dados de tool call recebidos:', JSON.stringify(data, null, 2));
+              }
+
+              // Processar tool calls (ferramentas)
+              if (data.toolCall) {
+                console.log('🔧 Tool call recebido:', data.toolCall);
+                
+                // Verificar se é a ferramenta sendToWhatsapp
+                if (data.toolCall.function?.name === 'sendToWhatsapp') {
+                  console.log('🔧 Função sendToWhatsapp detectada');
+                  
+                  // Se temos argumentos, processar
+                  if (data.toolCall.function?.arguments) {
+                    try {
+                      const args = JSON.parse(data.toolCall.function.arguments);
+                      console.log('🔧 Argumentos da função:', args);
+                      
+                      // Gerar URL do WhatsApp com os dados do usuário
+                      const { userInfo: patientInfo } = args;
+                      if (patientInfo) {
+                        const phoneNumber = '+5511945139833';
+                        const greeting = 'Olá, fiz um atendimento inicial com a IA médica e gostaria de agendar uma consulta com o Dr. Bernardo. Segue minhas informações abaixo:';
+                        const patientInfoText = [
+                          `Nome: ${patientInfo.name}`,
+                          `Idade: ${patientInfo.age}`,
+                          `Sexo: ${patientInfo.gender}`,
+                          `Peso: ${patientInfo.weight}kg`,
+                          `Altura: ${patientInfo.height}m`,
+                          `Profissão: ${patientInfo.profession}`,
+                        ].join('\n');
+                        
+                        const text = encodeURIComponent(`${greeting}\n\n${patientInfoText}`);
+                        const url = `https://wa.me/${phoneNumber}?text=${text}`;
+                        
+                        // Atualizar a mensagem do assistente com o WhatsApp URL
+                        setMessages(prev => {
+                          const newMessages = [...prev];
+                          const lastIndex = newMessages.length - 1;
+                          
+                          if (lastIndex >= 0 && newMessages[lastIndex].role === 'assistant') {
+                            newMessages[lastIndex] = {
+                              ...newMessages[lastIndex],
+                              whatsAppUrl: url,
+                            };
+                          }
+                          
+                          return newMessages;
+                        });
+                        
+                        console.log('🔧 URL do WhatsApp definida:', url);
+                      }
+                    } catch (error) {
+                      console.error('🔧 Erro ao processar argumentos da função:', error);
+                    }
+                  }
+                }
+              }
+
+              // Processar tool call deltas (argumentos sendo construídos)
+              if (data.toolCallDelta) {
+                console.log('🔧 Tool call delta recebido:', data.toolCallDelta);
+                
+                // Se é um delta de função e temos argumentos sendo construídos
+                if (data.toolCallDelta.function?.arguments) {
+                  try {
+                    // Tentar parsear os argumentos completos
+                    const args = JSON.parse(data.toolCallDelta.function.arguments);
+                    console.log('🔧 Argumentos completos da função:', args);
+                    
+                    // Se é a função sendToWhatsapp e temos dados do usuário
+                    if (args.userInfo) {
+                      const patientInfo = args.userInfo;
+                      const phoneNumber = '+5511945139833';
+                      const greeting = 'Olá, fiz um atendimento inicial com a IA médica e gostaria de agendar uma consulta com o Dr. Bernardo. Segue minhas informações abaixo:';
+                      const patientInfoText = [
+                        `Nome: ${patientInfo.name}`,
+                        `Idade: ${patientInfo.age}`,
+                        `Sexo: ${patientInfo.gender}`,
+                        `Peso: ${patientInfo.weight}kg`,
+                        `Altura: ${patientInfo.height}m`,
+                        `Profissão: ${patientInfo.profession}`,
+                      ].join('\n');
+                      
+                      const text = encodeURIComponent(`${greeting}\n\n${patientInfoText}`);
+                      const url = `https://wa.me/${phoneNumber}?text=${text}`;
+                      
+                      // Atualizar a mensagem do assistente com o WhatsApp URL
+                      setMessages(prev => {
+                        const newMessages = [...prev];
+                        const lastIndex = newMessages.length - 1;
+                        
+                        if (lastIndex >= 0 && newMessages[lastIndex].role === 'assistant') {
+                          newMessages[lastIndex] = {
+                            ...newMessages[lastIndex],
+                            whatsAppUrl: url,
+                          };
+                        }
+                        
+                        return newMessages;
+                      });
+                      
+                      console.log('🔧 URL do WhatsApp definida via delta:', url);
+                    }
+                  } catch (error) {
+                    // Se não conseguiu parsear, pode ser que os argumentos ainda estejam sendo construídos
+                    console.log('🔧 Argumentos ainda sendo construídos:', data.toolCallDelta.function.arguments);
+                  }
+                }
+              }
+
+              // Processar tool call completos (quando a função é executada)
+              if (data.toolCall && data.toolCall.function?.name === 'sendToWhatsapp') {
+                console.log('🔧 Tool call completo da função sendToWhatsapp:', data.toolCall);
+                
+                // Se temos argumentos completos, processar
+                if (data.toolCall.function?.arguments) {
+                  try {
+                    const args = JSON.parse(data.toolCall.function.arguments);
+                    console.log('🔧 Argumentos completos da função:', args);
+                    
+                    if (args.userInfo) {
+                      const patientInfo = args.userInfo;
+                      const phoneNumber = '+5511945139833';
+                      const greeting = 'Olá, fiz um atendimento inicial com a IA médica e gostaria de agendar uma consulta com o Dr. Bernardo. Segue minhas informações abaixo:';
+                      const patientInfoText = [
+                        `Nome: ${patientInfo.name}`,
+                        `Idade: ${patientInfo.age}`,
+                        `Sexo: ${patientInfo.gender}`,
+                        `Peso: ${patientInfo.weight}kg`,
+                        `Altura: ${patientInfo.height}m`,
+                        `Profissão: ${patientInfo.profession}`,
+                      ].join('\n');
+                      
+                      const text = encodeURIComponent(`${greeting}\n\n${patientInfoText}`);
+                      const url = `https://wa.me/${phoneNumber}?text=${text}`;
+                      
+                      // Atualizar a mensagem do assistente com o WhatsApp URL
+                      setMessages(prev => {
+                        const newMessages = [...prev];
+                        const lastIndex = newMessages.length - 1;
+                        
+                        if (lastIndex >= 0 && newMessages[lastIndex].role === 'assistant') {
+                          newMessages[lastIndex] = {
+                            ...newMessages[lastIndex],
+                            whatsAppUrl: url,
+                          };
+                        }
+                        
+                        return newMessages;
+                      });
+                      
+                      console.log('🔧 URL do WhatsApp definida via tool call completo:', url);
+                      
+                      // Limpar os argumentos acumulados após processar com sucesso
+                      argumentChunks = '';
+                    }
+                  } catch (error) {
+                    console.error('🔧 Erro ao processar argumentos do tool call completo:', error);
+                  }
+                }
+              }
+
+              // Processar tool call deltas (argumentos sendo construídos) - versão com acumulação
+              if (data.toolCallDelta && data.toolCallDelta.function?.arguments) {
+                console.log('🔧 Tool call delta com argumentos:', data.toolCallDelta.function.arguments);
+                
+                // Acumular os fragmentos dos argumentos
+                argumentChunks += data.toolCallDelta.function.arguments;
+                console.log('🔧 Argumentos acumulados:', argumentChunks);
+                
+                // Tentar fazer o parse dos argumentos acumulados
+                try {
+                  const args = JSON.parse(argumentChunks);
+                  console.log('🔧 Argumentos completos detectados no delta:', args);
+                  
+                  if (args.userInfo && args.userInfo.name) {
+                    const patientInfo = args.userInfo;
+                    const phoneNumber = '+5511945139833';
+                    const greeting = 'Olá, fiz um atendimento inicial com a IA médica e gostaria de agendar uma consulta com o Dr. Bernardo. Segue minhas informações abaixo:';
+                    const patientInfoText = [
+                      `Nome: ${patientInfo.name}`,
+                      `Idade: ${patientInfo.age}`,
+                      `Sexo: ${patientInfo.gender}`,
+                      `Peso: ${patientInfo.weight}kg`,
+                      `Altura: ${patientInfo.height}m`,
+                      `Profissão: ${patientInfo.profession}`,
+                    ].join('\n');
+                    
+                    const text = encodeURIComponent(`${greeting}\n\n${patientInfoText}`);
+                    const url = `https://wa.me/${phoneNumber}?text=${text}`;
+                    
+                    // Atualizar a mensagem do assistente com o WhatsApp URL
+                    setMessages(prev => {
+                      const newMessages = [...prev];
+                      const lastIndex = newMessages.length - 1;
+                      
+                      if (lastIndex >= 0 && newMessages[lastIndex].role === 'assistant') {
+                        newMessages[lastIndex] = {
+                          ...newMessages[lastIndex],
+                          whatsAppUrl: url,
+                        };
+                      }
+                      
+                      return newMessages;
+                    });
+                    
+                    console.log('🔧 URL do WhatsApp definida via delta acumulado:', url);
+                    
+                    // Limpar os argumentos acumulados após processar com sucesso
+                    argumentChunks = '';
+                  }
+                } catch (error) {
+                  console.log('🔧 Argumentos ainda sendo construídos:', argumentChunks);
                 }
               }
 

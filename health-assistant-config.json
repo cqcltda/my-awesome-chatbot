@@ -1,13 +1,13 @@
 {
-  "assistantId": "asst_IJ4s3Bo32Z2uTBLtawfISWT6",
+  "assistantId": "asst_r6CW3alWOqsMSLEwHe2163Oe",
   "name": "Assistente Médico",
   "model": "gpt-4o",
   "fileIds": [
-    "file-SwJm8wKwBPHDyiLwEcZzVK",
-    "file-3ekHbp8xvW5Xjo89JFDTAP",
-    "file-AWVa7jZX9675aHkTFMeMAR"
+    "file-9cGsaC93nH7NrRDon3EjCr",
+    "file-5srjK1D6f7PJNwX9LCqM7t",
+    "file-UwcVh6YEFzZUb5f7uWgo59"
   ],
-  "createdAt": "2025-07-20T01:10:18.661Z",
+  "createdAt": "2025-07-29T01:36:36.482Z",
   "files": [
     {
       "path": "./public/documents/base-1.pdf",

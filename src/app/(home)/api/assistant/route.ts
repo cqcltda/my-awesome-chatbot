@@ -88,12 +88,14 @@ export async function POST(request: NextRequest) {
                 // onToolCallCreated callback
                 (toolCall) => {
                   if (isClosed) return;
+                  console.log('🔧 Tool call criado no backend:', toolCall);
                   const chunk = `data: ${JSON.stringify({ toolCall })}\n\n`;
                   controller.enqueue(new TextEncoder().encode(chunk));
                 },
                 // onToolCallDelta callback
                 (toolCallDelta) => {
                   if (isClosed) return;
+                  console.log('🔧 Tool call delta no backend:', toolCallDelta);
                   const chunk = `data: ${JSON.stringify({ toolCallDelta })}\n\n`;
                   controller.enqueue(new TextEncoder().encode(chunk));
                 },

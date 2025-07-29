@@ -97,7 +97,34 @@ export async function createHealthAssistant(
   const assistant = await openai.beta.assistants.create({
     name: validatedConfig.name,
     instructions: validatedConfig.instructions,
-    tools: [{ type: 'file_search' }],
+    tools: [
+      { type: 'file_search' },
+      {
+        type: 'function',
+        function: {
+          name: 'sendToWhatsapp',
+          description: 'Encaminha o paciente para o WhatsApp para agendar uma consulta quando o encaminhamento para um médico for necessário.',
+          parameters: {
+            type: 'object',
+            properties: {
+              userInfo: {
+                type: 'object',
+                properties: {
+                  name: { type: 'string', description: 'Nome completo do paciente.' },
+                  age: { type: 'number', description: 'Idade do paciente.' },
+                  gender: { type: 'string', description: 'Sexo do paciente.' },
+                  weight: { type: 'number', description: 'Peso do paciente em kg.' },
+                  height: { type: 'number', description: 'Altura do paciente em metros.' },
+                  profession: { type: 'string', description: 'Profissão do paciente.' },
+                },
+                required: ['name', 'age', 'gender', 'weight', 'height', 'profession']
+              }
+            },
+            required: ['userInfo']
+          }
+        }
+      }
+    ],
     model: validatedConfig.model,
   });
 
@@ -242,7 +269,28 @@ export async function runUnifiedAssistantWithStreaming(
   while (retryCount < MAX_RETRIES) {
     try {
       // Adiciona a mensagem do usuário à thread
-      await addMessageToThread(threadId as string, userMessage, 'user');
+      // Se temos dados do usuário e é uma situação que pode precisar de WhatsApp, incluir os dados
+      let messageToSend = userMessage;
+      if (userInfo && Object.keys(userInfo).length > 0) {
+        const userInfoText = `
+Dados do paciente:
+- Nome: ${userInfo.name || 'Não informado'}
+- Idade: ${userInfo.age || 'Não informado'}
+- Sexo: ${userInfo.gender || 'Não informado'}
+- Peso: ${userInfo.weight || 'Não informado'} kg
+- Altura: ${userInfo.height || 'Não informado'} m
+- Profissão: ${userInfo.profession || 'Não informado'}
+- Localização: ${userInfo.location || 'Não informado'}
+- Contato: ${userInfo.contact || 'Não informado'}
+- Queixa Principal: ${userInfo.mainComplaint || 'Não informada'}
+- Duração: ${userInfo.duration || 'Não informada'}
+- Intensidade: ${userInfo.intensity || 'Não informada'}
+
+Mensagem do paciente: ${userMessage}`;
+        messageToSend = userInfoText;
+      }
+      
+      await addMessageToThread(threadId as string, messageToSend, 'user');
 
       // Executa o assistente com streaming
       // @ts-ignore - OpenAI API v5.10.2
