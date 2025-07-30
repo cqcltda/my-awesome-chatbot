@@ -206,7 +206,7 @@ async function checkRunStatus(threadId: string, runId: string): Promise<any> {
     
     console.log(`Verificando status do run: threadId=${threadId}, runId=${runId}`);
     
-    // @ts-ignore - OpenAI API pode ter mudado os tipos
+    // @ts-ignore - OpenAI API v5.10.2
     const run = await openai.beta.threads.runs.retrieve(threadId, runId);
     return run;
   } catch (error) {
@@ -423,12 +423,81 @@ export async function runUnifiedAssistant(
           }
 
         case 'requires_action':
-          console.log('Run requires action - function calling não implementado, continuando...');
-          // Por enquanto, vamos continuar sem implementar function calling
-          // Em uma implementação completa, você implementaria o handling de function calls aqui
-          // @ts-ignore - OpenAI API pode ter mudado os tipos
+          console.log('Run requires action - tratando function calling...');
+          
+          const toolCalls = finalRun.required_action?.submit_tool_outputs?.tool_calls;
+          if (toolCalls && toolCalls.length > 0) {
+            const toolCall = toolCalls[0];
+            
+            if (toolCall.function.name === 'sendToWhatsapp') {
+              try {
+                const args = JSON.parse(toolCall.function.arguments || '{}');
+                const user = args.userInfo;
+                
+                // Validar se temos os dados necessários
+                if (!user || !user.name || !user.age || !user.gender || !user.weight || !user.height || !user.profession) {
+                  console.error('Dados do usuário incompletos para WhatsApp:', user);
+                  return "Identifiquei que é necessário atendimento médico, mas preciso de mais informações para prosseguir. Por favor, forneça seus dados completos.";
+                }
+                
+                // Gerar link do WhatsApp com os dados do usuário
+                const phoneNumber = '+5511945139833'; // Número do consultório do Dr. Bernardo
+                const greeting = 'Olá, fiz um atendimento inicial com a IA médica e gostaria de agendar uma consulta com o Dr. Bernardo. Segue minhas informações abaixo:';
+                const patientInfo = [
+                  `Nome: ${user.name}`,
+                  `Idade: ${user.age}`,
+                  `Sexo: ${user.gender}`,
+                  `Peso: ${user.weight}kg`,
+                  `Altura: ${user.height}m`,
+                  `Profissão: ${user.profession}`,
+                ].join('\n');
+                
+                const text = encodeURIComponent(`${greeting}\n\n${patientInfo}`);
+                const whatsappLink = `https://wa.me/${phoneNumber}?text=${text}`;
+                
+                // Submeter o resultado da função para o assistente
+                // @ts-ignore - OpenAI API v5.10.2
+                await openai.beta.threads.runs.submitToolOutputs(threadId as string, run.id, {
+                  tool_outputs: [{
+                    tool_call_id: toolCall.id,
+                    output: JSON.stringify({
+                      url: whatsappLink,
+                      message: "Link do WhatsApp gerado com sucesso."
+                    })
+                  }]
+                });
+                
+                // Aguardar o run ser concluído após submeter os outputs
+                const completedRun = await pollRunStatus(threadId as string, run.id);
+                
+                if (completedRun.status === 'completed') {
+                  // Buscar a resposta final do assistente
+                  // @ts-ignore - OpenAI API v5.10.2
+                  const messages = await openai.beta.threads.messages.list(threadId as string);
+                  
+                  if (messages.data.length > 0) {
+                    const assistantResponse = messages.data[0].content[0];
+                    if (assistantResponse.type === 'text') {
+                      return assistantResponse.text.value;
+                    }
+                  }
+                }
+                
+                // Se não conseguir a resposta do assistente, retornar uma mensagem padrão
+                return `Identifiquei que é necessário atendimento médico. Você pode agendar sua consulta clicando no link abaixo:\n\n[Agendar via WhatsApp](${whatsappLink})`;
+                
+              } catch (error) {
+                console.error('Erro ao processar function call sendToWhatsapp:', error);
+                return "Identifiquei que é necessário atendimento médico, mas houve um erro técnico. Por favor, tente novamente.";
+              }
+            }
+          }
+          
+          // Se chegou aqui, não reconheceu a função
+          console.log('Função não reconhecida:', toolCalls?.[0]?.function?.name);
+          // @ts-ignore - OpenAI API v5.10.2
           await openai.beta.threads.runs.cancel(threadId as string, run.id);
-          return "Desculpe, estou enfrentando dificuldades técnicas no momento. Por favor, tente novamente.";
+          return "Foi identificada a necessidade de ação, mas a função não foi reconhecida. Por favor, tente novamente.";
 
         case 'failed':
           const errorMessage = finalRun.last_error?.message || 'Unknown error';

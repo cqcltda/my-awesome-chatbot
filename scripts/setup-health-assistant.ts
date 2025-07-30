@@ -107,17 +107,12 @@ Lembre-se: Sua função é INFORMAR, ORIENTAR e fazer TRIAGEM, não diagnosticar
 
 async function setupHealthAssistant() {
   try {
-    console.log('🚀 Iniciando configuração do Assistente Médico...\n');
 
     // Verificar se a chave da API está configurada
     if (!process.env.OPENAI_API_KEY) {
-      console.log('❌ OPENAI_API_KEY não encontrada no arquivo .env.local');
-      console.log('💡 Adicione sua chave da OpenAI no arquivo .env.local:');
-      console.log('   OPENAI_API_KEY=sua_chave_aqui');
       return;
     }
 
-    console.log('✅ Chave da API da OpenAI configurada');
 
     // Verificar se os arquivos PDF existem na pasta public/documents
     const pdfFiles = [
@@ -129,42 +124,27 @@ async function setupHealthAssistant() {
     const existingFiles = pdfFiles.filter(file => fs.existsSync(file));
     
     if (existingFiles.length === 0) {
-      console.log('❌ Nenhum arquivo PDF encontrado na pasta public/documents.');
-      console.log('📁 Arquivos esperados:');
-      pdfFiles.forEach(file => console.log(`   - ${file}`));
-      console.log('\n💡 Coloque os arquivos PDF na pasta public/documents e execute novamente.');
       return;
     }
 
-    console.log(`📄 Arquivos encontrados: ${existingFiles.length}/${pdfFiles.length}`);
     existingFiles.forEach(file => {
       const fileName = path.basename(file);
       const fileSize = fs.statSync(file).size;
       const fileSizeMB = (fileSize / (1024 * 1024)).toFixed(2);
-      console.log(`   ✅ ${fileName} (${fileSizeMB} MB)`);
     });
 
     if (existingFiles.length < pdfFiles.length) {
-      console.log('\n⚠️  Alguns arquivos não foram encontrados. O assistente será criado com os arquivos disponíveis.');
     }
 
     // Upload dos arquivos
-    console.log('\n📤 Fazendo upload dos arquivos para a OpenAI...');
     const fileIds = await uploadFiles(existingFiles);
-    console.log(`✅ ${fileIds.length} arquivos enviados com sucesso!`);
 
     // Criar o assistente
-    console.log('\n🤖 Criando o Assistente Médico...');
     const assistant = await createHealthAssistant({
       ...UNIFIED_HEALTH_ASSISTANT_CONFIG,
       fileIds,
     });
 
-    console.log('\n🎉 Assistente Médico configurado com sucesso!');
-    console.log(`📋 ID do Assistente: ${assistant.id}`);
-    console.log(`📝 Nome: ${assistant.name}`);
-    console.log(`🧠 Modelo: ${assistant.model}`);
-    console.log(`📁 Arquivos associados: ${assistant.fileIds.length}`);
 
     // Salvar o ID do assistente em um arquivo para uso posterior
     const configData = {
@@ -185,12 +165,8 @@ async function setupHealthAssistant() {
       JSON.stringify(configData, null, 2)
     );
 
-    console.log('\n💾 Configuração salva em: ./health-assistant-config.json');
-    console.log('\n🔧 Para usar o assistente, adicione o ID nas variáveis de ambiente:');
-    console.log(`   HEALTH_ASSISTANT_ID=${assistant.id}`);
 
     // Mostrar informações sobre os arquivos
-    console.log('\n📚 Documentos carregados:');
     existingFiles.forEach((file, index) => {
       const fileName = path.basename(file);
       const descriptions = [
@@ -198,16 +174,8 @@ async function setupHealthAssistant() {
         'Valores Ideais de Exames Laboratoriais', 
         'Guia Magistral Singularis'
       ];
-      console.log(`   ${index + 1}. ${fileName} - ${descriptions[index] || 'Documento'}`);
     });
 
-    console.log('\n🎯 FUNCIONALIDADES DO ASSISTENTE:');
-    console.log('   ✅ Triagem médica inteligente');
-    console.log('   ✅ Análise de sintomas especializada');
-    console.log('   ✅ Interpretação de exames laboratoriais');
-    console.log('   ✅ Informações sobre suplementos');
-    console.log('   ✅ Detecção automática de tipo de pergunta');
-    console.log('   ✅ Base de conhecimento médica especializada');
 
   } catch (error) {
     console.error('❌ Erro ao configurar o assistente:', error);

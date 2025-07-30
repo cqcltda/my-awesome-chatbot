@@ -29,7 +29,6 @@ export interface UserInfo {
 export async function createThread(): Promise<string> {
   try {
     const thread = await openai.beta.threads.create();
-    console.log(`Thread criada com ID: ${thread.id}`);
     
     if (!thread.id) {
       throw new Error('Thread created but no ID returned');
@@ -55,14 +54,12 @@ export async function addMessageToThread(
       throw new Error('ThreadId is required for adding message');
     }
     
-    console.log(`Adicionando mensagem à thread ${threadId}:`, { role, message: message.substring(0, 50) + '...' });
     
     await openai.beta.threads.messages.create(threadId, {
       role,
       content: message,
     });
     
-    console.log('Mensagem adicionada com sucesso');
   } catch (error) {
     console.error('Erro ao adicionar mensagem à thread:', error);
     throw new Error(`Failed to add message to thread: ${error}`);
@@ -85,7 +82,6 @@ export async function runAssistantSimple(
       throw new Error('ThreadId is required but was not provided');
     }
 
-    console.log(`Executando assistente simples: assistantId=${assistantId}, threadId=${threadId}`);
 
     // Adiciona a mensagem do usuário à thread
     await addMessageToThread(threadId, userMessage, 'user');
@@ -95,14 +91,12 @@ export async function runAssistantSimple(
       assistant_id: assistantId,
     });
 
-    console.log(`Run criado com ID: ${run.id} na thread ${threadId}`);
 
     // Aguarda o run ser concluído com polling otimizado
     let runStatus = run;
     let attempts = 0;
     const maxAttempts = 15; // Reduzir tentativas para resposta mais rápida
     
-    console.log(`Aguardando run ${run.id} ser concluído...`);
     
     while ((runStatus.status === 'in_progress' || runStatus.status === 'queued') && attempts < maxAttempts) {
       await new Promise(resolve => setTimeout(resolve, 1000)); // Aguardar 1 segundo
@@ -111,7 +105,6 @@ export async function runAssistantSimple(
       try {
         // @ts-ignore - OpenAI API v5.10.2
         runStatus = await openai.beta.threads.runs.retrieve(threadId, run.id);
-        console.log(`Tentativa ${attempts}: Status do run = ${runStatus.status}`);
         
         // Verificar se houve erro
         if (runStatus.status === 'failed') {
@@ -127,15 +120,12 @@ export async function runAssistantSimple(
         }
         
       } catch (error) {
-        console.log(`Erro ao verificar status do run (tentativa ${attempts}):`, error);
         // Continuar tentando mesmo com erro
       }
     }
     
-    console.log(`Status final do run: ${runStatus.status}`);
     
     if (runStatus.status !== 'completed') {
-      console.log(`Run não foi concluído. Status final: ${runStatus.status}`);
       // Mesmo assim, tentar buscar mensagens
     }
 
@@ -151,9 +141,7 @@ export async function runAssistantSimple(
     const assistantMessage = messages.data.find(msg => msg.role === 'assistant');
     
     if (!assistantMessage) {
-      console.log('Nenhuma resposta do assistente encontrada. Mensagens disponíveis:');
       messages.data.forEach((msg, index) => {
-        console.log(`  ${index}: role=${msg.role}, content=${msg.content[0]?.type || 'unknown'}`);
       });
       
       // Retornar uma mensagem de fallback em vez de erro

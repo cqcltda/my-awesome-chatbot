@@ -63,6 +63,8 @@ const FloatingChat = ({ id,
   // Hook do assistente unificado
   const healthAssistant = useHealthAssistant();
 
+
+
   const {
     messages,
     setMessages,
@@ -259,7 +261,7 @@ const FloatingChat = ({ id,
             ) : (
               <div className="space-y-4">
                 {healthAssistant.messages.map((message, index) => (
-                  <div key={`unified-${index}-${message.timestamp.getTime()}`} className="flex items-start gap-3">
+                  <div key={message.id || `unified-${index}`} className="flex items-start gap-3">
                     <div className="shrink-0 mt-1">
                       {message.role === 'user' ? (
                         <div className="size-4 bg-blue-600 rounded-full flex items-center justify-center">

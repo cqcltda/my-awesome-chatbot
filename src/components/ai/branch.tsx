@@ -1,12 +1,12 @@
 'use client';
 
 import {
-  AIBranch,
-  AIBranchMessages,
-  AIBranchNext,
-  AIBranchPage,
-  AIBranchPrevious,
-  AIBranchSelector,
+    AIBranch,
+    AIBranchMessages,
+    AIBranchNext,
+    AIBranchPage,
+    AIBranchPrevious,
+    AIBranchSelector,
 } from '@/components/ui/kibo-ui/ai/branch';
 import { AIMessage, AIMessageContent } from '@/components/ui/kibo-ui/ai/message';
 
